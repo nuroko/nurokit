@@ -35,4 +35,11 @@
 			<url>http://clojars.org/repo</url>
 		</repository>
 	</repositories>
+	<dependencies>
+		<dependency>
+			<groupId>org.clojure</groupId>
+			<artifactId>clojure</artifactId>
+			<version>1.4.0</version>
+		</dependency>
+	</dependencies>
 </project>
