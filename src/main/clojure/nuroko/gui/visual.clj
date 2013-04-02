@@ -3,7 +3,7 @@
   (:import [java.awt Graphics2D Color GridLayout])
   (:import [java.awt.event ActionEvent ActionListener])
   (:import [java.awt.image BufferedImage])
-  (:import [nuroko.module NeuralNet WeightLayer])
+  (:import [nuroko.module ALayerStack AWeightLayer])
   (:import [mikera.gui Frames JIcon])
   (:import [mikera.util Maths])
   (:import [mikera.vectorz AVector Vectorz])
@@ -134,7 +134,7 @@
 
 
 (defn network-graph
-  ([^NeuralNet nn
+  ([^ALayerStack nn
     & {:keys [border repaint-speed activation-size line-width] 
        :or {border 20
             repaint-speed 50
@@ -149,7 +149,7 @@
                 width (double (.getWidth this))
                 height (double (.getHeight this))
                 layers (.getLayerCount nn)
-                max-size (max (input-length nn) (reduce max (map #(.getOutputLength ^WeightLayer %) (.getLayers nn))))
+                max-size (max (input-length nn) (reduce max (map #(.getOutputLength ^AWeightLayer %) (.getLayers nn))))
                 step (/ (double width) max-size)
                 as (double activation-size)]
             (.setColor g (Color/BLACK))
@@ -250,7 +250,7 @@
 
 
 
-(defn layer-feature-calc ^AVector [^nuroko.module.WeightLayer wl ^AVector out-weights]
+(defn layer-feature-calc ^AVector [^nuroko.module.AWeightLayer wl ^AVector out-weights]
   (let [ol (output-length wl)
         in-weights (Vectorz/newVector (input-length wl))]
     (dotimes [i ol]
