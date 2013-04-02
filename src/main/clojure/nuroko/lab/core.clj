@@ -343,7 +343,7 @@
 ;; Trainer functions
 
 (defn supervised-trainer 
-    [^nuroko.module.AThinkStack network task
+    [^nuroko.core.ITrainable network task
      & {:keys [batch-size updater] 
         :or {batch-size 10}}]
     (let [input-length (input-length network)
@@ -351,7 +351,7 @@
           updater (or updater (rmsprop-updater network)) 
           input (Vectorz/newVector input-length)
           target (Vectorz/newVector output-length)] 
-      (fn [^nuroko.module.AThinkStack network]
+      (fn [^nuroko.core.ITrainable network]
         (dotimes [i (long batch-size)]
           (get-input task input)
           (get-target task input target)

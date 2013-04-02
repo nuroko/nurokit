@@ -259,7 +259,7 @@
         (.addMultiple in-weights (.getSourceWeights wl i) (.getSourceIndex wl i) y)))
     in-weights))
 
-(defn stack-feature-calc ^AVector [^nuroko.module.AThinkStack stack ^AVector out-weights]
+(defn stack-feature-calc ^AVector [^nuroko.module.ALayerStack stack ^AVector out-weights]
   (loop [i (dec (.getLayerCount stack))
          output out-weights]
     (if (< i 0)
