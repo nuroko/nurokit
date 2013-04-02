@@ -252,10 +252,10 @@
 
 (defn layer-feature-calc ^AVector [^nuroko.module.AWeightLayer wl ^AVector out-weights]
   (let [ol (output-length wl)
-        in-weights (Vectorz/newVector (input-length wl))]
+        in-weights ^AVector (Vectorz/newVector (input-length wl))]
     (dotimes [i ol]
       (let [i (int i)
-            y (.get out-weights i)]
+            y (double (.get out-weights i))]
         (.addMultiple in-weights (.getSourceWeights wl i) (.getSourceIndex wl i) y)))
     in-weights))
 
