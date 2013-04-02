@@ -40,7 +40,7 @@
 
 (defn weight-colour-mono 
   (^long [^double weight]
-    (let [v (Maths/sigmoid (double weight))]
+    (let [v (Maths/logistic (double weight))]
       (mc.image/rgb v v v))))
 
 (defn mono-rgb 
@@ -50,7 +50,7 @@
 
 (defn sigmoid-rgb 
   (^long [^double cv]
-    (let [s (Maths/sigmoid cv)]
+    (let [s (Maths/logistic cv)]
       (mc.image/rgb s s s))))
 
 (defn activation-colour 
