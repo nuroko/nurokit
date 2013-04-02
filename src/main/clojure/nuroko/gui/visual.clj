@@ -288,7 +288,6 @@
           ]
       (ig (Vectorz/join ^java.util.List (vec (map (partial think stack) examples)))))))
 
-(defn feature)
 
 ;; DEMO CODE
 
