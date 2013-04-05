@@ -124,7 +124,7 @@
        :as options
        :or {title nil}}]
   (let [com (component com)]
-    (Frames/display com title))))
+    (Frames/display com (str title)))))
 
 
 (defn default-dimensions
@@ -236,7 +236,7 @@
 
 
 (defn scatter-outputs 
-  "Shows a catter graph of 2 output values."
+  "Shows a scatter graph of 2 output values."
   ([data
     & {:keys [labels x-index y-index] 
        :or {x-index 0
