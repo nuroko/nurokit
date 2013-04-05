@@ -1,5 +1,5 @@
 (ns nuroko.lab.core
-  (:import [nuroko.core NurokoException IParameterised ITrainable])  
+  (:import [nuroko.core NurokoException IParameterised ITrainable Components])  
   (:import [nuroko.module AWeightLayer NeuralNet FullWeightLayer SparseWeightLayer])
   (:import [mikera.vectorz Op AVector Vectorz]))
 
@@ -282,8 +282,8 @@
 
 (defn connect 
   "Connects networks together sequentially (data flow from left to right)"
-  (^nuroko.module.NetworkStack [& nets]
-    (nuroko.module.NetworkStack. ^java.util.List (vec nets))))
+  ([& nets]
+    (Components/connect ^java.util.List (vec nets))))
 
 ;; ===========================================
 ;; Weight update algorithms
