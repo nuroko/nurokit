@@ -1,7 +1,7 @@
 (ns nuroko.lab.core
   (:import [nuroko.core NurokoException IParameterised ITrainable Components])  
   (:import [nuroko.module AWeightLayer NeuralNet])
-  (:import [mikera.vectorz Op AVector Vectorz]))
+  (:import [mikera.vectorz Op Ops AVector Vectorz]))
 
 (set! *warn-on-reflection* true)
 (set! *unchecked-math* true)
@@ -254,8 +254,8 @@
   (^nuroko.module.NeuralNet [& {:keys [inputs outputs layers max-links hidden-op output-op hidden-sizes] 
                                   :as options
                                   :or {layers 3
-                                       output-op Op/LOGISTIC
-                                       hidden-op Op/TANH}}]
+                                       output-op Ops/LOGISTIC
+                                       hidden-op Ops/TANH}}]
  ;;   (println (str "NN: " options)) 
     (if-not inputs (error "No :inputs length specified!")) 
     (if-not outputs (error "No :outputs length specified!")) 
