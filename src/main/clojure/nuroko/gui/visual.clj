@@ -4,6 +4,7 @@
   (:import [java.awt.event ActionEvent ActionListener])
   (:import [java.awt.image BufferedImage])
   (:import [nuroko.module ALayerStack AWeightLayer])
+  (:import [nuroko.core IComponent Components])
   (:import [mikera.gui Frames JIcon])
   (:import [mikera.util Maths])
   (:import [mikera.vectorz AVector Vectorz])
@@ -259,19 +260,21 @@
         (.addMultiple in-weights (.getSourceWeights wl i) (.getSourceIndex wl i) y)))
     in-weights))
 
-(defn stack-feature-calc ^AVector [^nuroko.module.ALayerStack stack ^AVector out-weights]
-  (loop [i (dec (.getLayerCount stack))
-         output out-weights]
-    (if (< i 0)
-      output
-      (recur (dec i) (layer-feature-calc (.getLayer stack i) output)))))
+(defn stack-feature-calc ^AVector [stack ^AVector out-weights]
+  (let [stack (Components/asLayerStack stack)]
+    (loop [i (dec (.getLayerCount stack))
+           output out-weights]
+      (if (< i 0)
+        output
+        (recur (dec i) (layer-feature-calc (.getLayer stack i) output))))))
 
 (defn feature-maps
   "Returns feature map vecttps for an AThinkStack"
-  ([^nuroko.module.AThinkStack stack
+  ([stack
     & {:keys [scale] 
        :or {scale 1.0}}]
-    (let [ol (output-length stack)
+    (let [stack (Components/asLayerStack stack)
+          ol (output-length stack)
           scale (double scale)]
       (for [i (range ol)]
         (let [top-vector (Vectorz/axisVector (int i) ol)
@@ -280,9 +283,9 @@
           result)))))
 
 (defn spatio-map 
-  ([^nuroko.module.AThinkStack stack
+  ([stack
     examples]
-    (let [stack (.clone stack)
+    (let [stack (.clone ^IComponent stack)
           ig (image-generator :width (output-length stack)
                               :height (count examples)) 
           ]

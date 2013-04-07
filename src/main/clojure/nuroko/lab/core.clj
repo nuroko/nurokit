@@ -1,6 +1,6 @@
 (ns nuroko.lab.core
   (:import [nuroko.core NurokoException IParameterised ITrainable Components])  
-  (:import [nuroko.module AWeightLayer NeuralNet FullWeightLayer SparseWeightLayer])
+  (:import [nuroko.module AWeightLayer NeuralNet])
   (:import [mikera.vectorz Op AVector Vectorz]))
 
 (set! *warn-on-reflection* true)
@@ -246,9 +246,7 @@
   (^nuroko.module.AWeightLayer [& {:keys [inputs outputs max-links] 
                                   :or {max-links Long/MAX_VALUE}}]
     (if-not outputs (error "Needs :outputs parameter (number of output values)"))
-    (if (<= inputs max-links) 
-      (FullWeightLayer. (int inputs) (int outputs))
-      (SparseWeightLayer. (int inputs) (int outputs) max-links))))
+    (Components/weightLayer (int inputs) (int outputs) (int max-links))))
 
 
 (defn neural-network 
@@ -280,10 +278,12 @@
 ;; ===========================================
 ;; Compositions
 
-(defn connect 
+(defn stack 
   "Connects networks together sequentially (data flow from left to right)"
   ([& nets]
-    (Components/connect ^java.util.List (vec nets))))
+    (Components/stack ^java.util.List (vec nets))))
+
+(def connect stack) 
 
 ;; ===========================================
 ;; Weight update algorithms
