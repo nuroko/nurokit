@@ -1,10 +1,14 @@
 (ns nuroko.lab.core
+  (:use [clojure.core.matrix])
   (:import [nuroko.core NurokoException IParameterised ITrainable Components])  
   (:import [nuroko.module AWeightLayer NeuralNet])
+  (:require [mikera.vectorz.matrix-api]) 
   (:import [mikera.vectorz Op Ops AVector Vectorz]))
 
 (set! *warn-on-reflection* true)
 (set! *unchecked-math* true)
+
+(set-current-implementation :vectorz)
 
 (defmacro error [& msgs]
   `(throw (NurokoException. (str ~@msgs))))
