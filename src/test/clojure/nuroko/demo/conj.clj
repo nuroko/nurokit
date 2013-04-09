@@ -9,8 +9,6 @@
   (:import [mikera.vectorz AVector Vectorz]))
 
 (ns nuroko.demo.conj)
-(set! *warn-on-reflection* true)
-(set! *unchecked-math* true)
 
 ;; som eutility functions
 (defn feature-img [vector]
