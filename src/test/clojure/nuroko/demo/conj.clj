@@ -1,13 +1,18 @@
 (ns nuroko.demo.conj
   (:use [nuroko.lab core charts])
   (:use [nuroko.gui visual])
+  (:use [clojure.core.matrix])
   (:require [task.core :as task])
   (:require [nuroko.data mnist])
-  (:import [mikera.vectorz Op])
+  (:import [mikera.vectorz Op Ops])
   (:import [nuroko.coders CharCoder])
   (:import [mikera.vectorz AVector Vectorz]))
 
 (ns nuroko.demo.conj)
+
+;; som eutility functions
+(defn feature-img [vector]
+  ((image-generator :width 28 :height 28 :colour-function weight-colour-mono) vector))  
 
 (defn demo []
 
@@ -68,7 +73,7 @@
   (def trainer (supervised-trainer net task))
   
   (task/run 
-    {:sleep 1 :repeat 4000}
+    {:sleep 100 :repeat 100} ;; sleep used to slow it down, otherwise trains instantly.....
     (trainer net))
    
   (scrabble-score net \q)
@@ -83,13 +88,13 @@
   ;; training data - 60,000 cases
   (def data @nuroko.data.mnist/data-store)
   (def labels @nuroko.data.mnist/label-store)
+  (def INNER_SIZE 300) 
 
   (count data)
 
   ;; some visualisation
   ;; image display function
-  (defn img [vector]
-    ((image-generator :width 28 :height 28) vector))  
+
     
   (show (map img (take 100 data)) 
         :title "First 100 digits") 
@@ -104,43 +109,41 @@
   
   (def compressor 
 	  (neural-network :inputs 784 
-	                  :outputs 150
-                    :layers 1))
+	                  :outputs INNER_SIZE
+                    :layers 1
+                    :output-op Ops/LOGISTIC
+                    :dropout 0.5))
   
   (def decompressor 
-	  (neural-network :inputs 150  
+	  (neural-network :inputs INNER_SIZE  
 	                  :outputs 784
                     :layers 1))
   
   (def reconstructor 
     (connect compressor decompressor)) 
 
- 
   (defn show-reconstructions []
-    (show 
-      (->> (take 100 data)
-           (map (partial think reconstructor)) 
-           (map img)) 
-      :title "100 digits reconstructed"))
+    (let [reconstructor (.clone reconstructor)]
+      (show 
+        (->> (take 100 data)
+          (map (partial think reconstructor)) 
+          (map img)) 
+        :title "100 digits reconstructed")))
   (show-reconstructions) 
 
 
   (def trainer (supervised-trainer reconstructor compress-task))
   
 	(task/run 
-    {:sleep 10 :repeat 100}
+    {:sleep 1 :repeat 100}
     (do 
-      (dotimes [i 10] (trainer reconstructor))
+      (trainer reconstructor)
       (show-reconstructions)))
     
   (task/stop-all)
  
   ;; look at feature maps for 150 hidden units
-  (defn feature-img [vector]
-    ((image-generator :width 28 :height 28 :colour-function weight-colour-rgb) vector))  
- 
-  (show (map feature-img 
-             (feature-maps compressor :scale 4)) :title "Feature maps") 
+  (show (map feature-img (feature-maps compressor :scale 2)) :title "Feature maps") 
 
   
   ;; now for the digit recognition
@@ -155,14 +158,18 @@
  	    :output-coder num-coder))
   
   (def recogniser
-    (neural-network :inputs 150  
+    (neural-network :inputs INNER_SIZE  
 	                  :outputs 10
                     :layers 3))
   
   (def recognition-network 
     (connect compressor recogniser))
   
-  (def trainer2 (supervised-trainer recognition-network recognition-task))
+  (def trainer2 (supervised-trainer recognition-network 
+                                    recognition-task 
+                                    :loss-function nuroko.module.loss.CrossEntropyLoss/INSTANCE
+                                    :learn-rate 0.1
+                                   ))
 
   ;; test data and task - 10,000 cases
   (def test-data @nuroko.data.mnist/test-data-store)
@@ -173,6 +180,7 @@
                         (interleave test-data test-labels)) 
 	                :output-coder num-coder))
   
+  ;; show chart of training error (blue) and test error (red)
   (show (time-chart [#(evaluate-classifier 
                         recognition-task recognition-network )
                      #(evaluate-classifier 
@@ -181,8 +189,9 @@
         :title "Error rate")
   
   (task/run 
-    {:sleep 5 :repeat 10000}
-    (trainer2 recognition-network ))
+    {:sleep 1 :repeat 1000}
+    (trainer2 recognition-network :learn-rate 0.3)) 
+     ;; can tune learn-rate, lower => fine tuning => able to hit better overall accuracy
     
   (task/stop-all)
   
@@ -193,11 +202,19 @@
 
   (recognise (data 0))
   
-  (show (map recognise 
-             (take 100 data)) 
+  ;; show results, errors are starred
+  (show (map (fn [l r] (if (= l r) l (str r "*")))
+             (take 100 labels)
+             (map recognise (take 100 data))) 
         :title "Recognition results") 
+   
+  (let [rnet (.clone recognition-network)]
+    (reduce 
+    (fn [acc i] (if (= (test-labels i) (->> (test-data i) (think rnet) (decode num-coder))) 
+                  (inc acc) acc))
+    0 (range (count test-data)))) 
   
-  
+  (show (class-separation-chart recognition-network (take 1000 test-data) (take 1000 test-labels)))
   
   ;; ===============================
   ;; END of DEMO
