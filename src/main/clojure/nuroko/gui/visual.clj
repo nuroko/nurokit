@@ -1,13 +1,14 @@
 (ns nuroko.gui.visual
+  (:use clojure.core.matrix)
   (:import [javax.swing JComponent JLabel JPanel])
   (:import [java.awt Graphics2D Color GridLayout])
   (:import [java.awt.event ActionEvent ActionListener])
   (:import [java.awt.image BufferedImage])
   (:import [nuroko.module ALayerStack AWeightLayer])
-  (:import [nuroko.core IComponent Components])
+  (:import [nuroko.core IComponent Components IThinker])
   (:import [mikera.gui Frames JIcon])
   (:import [mikera.util Maths])
-  (:import [mikera.vectorz AVector Vectorz])
+  (:import [mikera.vectorz AVector Vectorz Vector Vector2])
   (:import [org.jfree.chart ChartPanel JFreeChart])
   (:require [incanter core charts])
   (:require [mc image])
@@ -87,6 +88,14 @@
 	         (.setDataElements (.getRaster bi) (int 0) (int 0) width height data)
 	         bi)))))
 
+(defn img 
+  "Function to create an image from a vector. Defaults to fitting to a square"
+  ([^AVector vector & {:keys [width colour-function] }]
+    (let [vlen (.length vector)
+          width (long (or width (Math/sqrt vlen)))
+          height (quot vlen width)
+          colour-function (or colour-function weight-colour-rgb)]
+      ((image-generator :width width :height height :colour-function colour-function) vector))))  
 
 (defn label 
   "Creates a JLabel with the given content"
@@ -260,18 +269,20 @@
         (.addMultiple in-weights (.getSourceWeights wl i) (.getSourceIndex wl i) y)))
     in-weights))
 
-(defn stack-feature-calc ^AVector [stack ^AVector out-weights]
-  (let [stack (Components/asLayerStack stack)]
-    (loop [i (dec (.getLayerCount stack))
+(defn stack-feature-calc ^AVector [stack ^AVector out-weights
+                                   & {:keys []}]
+  (let [stack (Components/asLayerStack stack)
+        lc (.getLayerCount stack)]
+    (loop [i (dec lc)
            output out-weights]
       (if (< i 0)
         output
         (recur (dec i) (layer-feature-calc (.getLayer stack i) output))))))
 
 (defn feature-maps
-  "Returns feature map vecttps for an AThinkStack"
+  "Returns feature map vectors for an AThinkStack"
   ([stack
-    & {:keys [scale] 
+    & {:keys [scale max-layers] 
        :or {scale 1.0}}]
     (let [stack (Components/asLayerStack stack)
           ol (output-length stack)
@@ -290,6 +301,28 @@
                               :height (count examples)) 
           ]
       (ig (Vectorz/join ^java.util.List (vec (map (partial think stack) examples)))))))
+
+;; class separation chart
+(defn class-point 
+  "Turns a classification vector into a point on the unit circle."
+  ([^AVector v]
+    (let [n (.length v)
+          v (.clone v)
+          vsum (double (esum v))
+          ^AVector v (if (== vsum 0) v (scale v (/ 1.0 vsum)))
+          r (Vectorz/newVector 2)]
+      (dotimes [i n]
+        (let [d (.get v (int i))
+              a (/ (* i (* 2.0 Math/PI)) n)]
+          (add! r (Vector2/of (* d (Math/sin a)) (* d (Math/cos a))))))
+      r)))
+
+(defn class-separation-chart
+  "Shows a chart of class separation with each class pulled to a different point on the unit circle"
+  ([^IThinker t inputs classes]
+    (let [t (.clone t)
+          cps (map #(class-point (think t %)) inputs)]
+      (incanter.charts/scatter-plot (map first cps) (map second cps) :group-by classes))))
 
 
 ;; DEMO CODE

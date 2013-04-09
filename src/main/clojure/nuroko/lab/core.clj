@@ -1,5 +1,6 @@
 (ns nuroko.lab.core
   (:use [clojure.core.matrix])
+  (:require [mikera.cljutils.error :refer [error]])
   (:import [nuroko.core NurokoException IParameterised ITrainable Components])  
   (:import [nuroko.module AWeightLayer NeuralNet])
   (:require [mikera.vectorz.matrix-api]) 
@@ -8,10 +9,9 @@
 (set! *warn-on-reflection* true)
 (set! *unchecked-math* true)
 
-(set-current-implementation :vectorz)
+(declare stack) 
 
-(defmacro error [& msgs]
-  `(throw (NurokoException. (str ~@msgs))))
+(set-current-implementation :vectorz)
 
 ;; ==================================
 ;; Thinkers and main modules
@@ -248,14 +248,14 @@
 (defn weight-layer
   "Creates a weight layer for a neural network"
   (^nuroko.module.AWeightLayer [& {:keys [inputs outputs max-links] 
-                                  :or {max-links Long/MAX_VALUE}}]
+                                  :or {max-links Integer/MAX_VALUE}}]
     (if-not outputs (error "Needs :outputs parameter (number of output values)"))
     (Components/weightLayer (int inputs) (int outputs) (int max-links))))
 
 
 (defn neural-network 
   "Creates a standard neural network"
-  (^nuroko.module.NeuralNet [& {:keys [inputs outputs layers max-links hidden-op output-op hidden-sizes] 
+  (^nuroko.module.NeuralNet [& {:keys [inputs outputs layers max-links hidden-op output-op hidden-sizes dropout] 
                                   :as options
                                   :or {layers 3
                                        output-op Ops/LOGISTIC
@@ -277,7 +277,9 @@
                               :max-links (or max-links (sizes i))))))
       (let [nn (NeuralNet. layer-array hidden-op output-op)]
         (.initRandom nn)
-        nn))))
+        (if dropout
+          (stack nn (Components/dropout (int outputs) (double dropout)))
+          nn)))))
 
 ;; ===========================================
 ;; Compositions
@@ -297,16 +299,17 @@
   "Creates a training algorithm that improves a neural network for the given task"
   ([^nuroko.core.IParameterised network
     & {:keys [momentum-factor learn-rate] 
-       :or {momentum-factor 0.95
-            learn-rate 0.0001}}]
+       :or {momentum-factor 0.9
+            learn-rate 1.0}}]
     (let [parameter-length (.getParameterLength ^IParameterised network)
           ^AVector last-update (Vectorz/newVector parameter-length)
-          momentum-factor (double momentum-factor)]
+          momentum-factor (double momentum-factor)
+          learn-factor (double (* 0.01 learn-rate))]
       (fn [^nuroko.core.IParameterised network]
         (let [^AVector gradient (get-gradient network)
               ^AVector parameters (get-parameters network)] 
 	        (.multiply last-update momentum-factor)
-	        (.addMultiple last-update gradient (* 1.0 learn-rate))
+	        (.addMultiple last-update gradient learn-factor)
 	        (.add parameters last-update)
 	        
 	        (.fill gradient 0.0))))))
@@ -346,20 +349,26 @@
 ;; ===========================================
 ;; Trainer functions
 
+(defn default-loss-function [network]
+  nuroko.module.loss.SquaredErrorLoss/INSTANCE) 
+
 (defn supervised-trainer 
     [^nuroko.core.ITrainable network task
-     & {:keys [batch-size updater] 
-        :or {batch-size 10}}]
+     & {:keys [batch-size updater learn-rate loss-function] 
+        :or {batch-size 100
+             learn-rate 1.0
+             loss-function (default-loss-function network)}}]
     (let [input-length (input-length network)
           output-length (output-length network)
-          updater (or updater (rmsprop-updater network)) 
+          updater (or updater (backprop-updater network)) 
           input (Vectorz/newVector input-length)
-          target (Vectorz/newVector output-length)] 
+          target (Vectorz/newVector output-length)
+          learn-rate-factor (double learn-rate)] 
       (fn [^nuroko.core.ITrainable network]
         (dotimes [i (long batch-size)]
           (get-input task input)
           (get-target task input target)
-          (.train network input target))
+          (.train network input target ^nuroko.module.loss.LossFunction loss-function learn-rate-factor))
         (updater network))))
 
 ;; ===========================================
@@ -391,8 +400,9 @@
 (defn evaluate-classifier 
   "Evaluates a network gainst a given task"
   ([^nuroko.core.ITask task ^nuroko.core.IThinker network
-    & {:keys [iterations] 
-       :or {iterations 100}}]
+    & {:keys [iterations probabilistic] 
+       :or {iterations 100
+            probabilistic false}}]
     (let [network (.clone network)
           task (.clone task)
           result (atom 0.0)
@@ -406,6 +416,10 @@
         (get-target task input target)
         (think network input output)
         (let [class-index (Vectorz/indexOfMaxValue output) 
-              correctness (.get target class-index)]
+              correctness (if probabilistic
+                            (dot target output)
+                            (.get target class-index))]
           (swap! result + correctness)))
       (- 1.0 (/ (double @result) iterations)))))
+
+
