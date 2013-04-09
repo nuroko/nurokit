@@ -364,11 +364,13 @@
           input (Vectorz/newVector input-length)
           target (Vectorz/newVector output-length)
           learn-rate-factor (double learn-rate)] 
-      (fn [^nuroko.core.ITrainable network]
+      (fn [^nuroko.core.ITrainable network & {:keys [learn-rate]}]
         (dotimes [i (long batch-size)]
           (get-input task input)
           (get-target task input target)
-          (.train network input target ^nuroko.module.loss.LossFunction loss-function learn-rate-factor))
+          (.train network input target 
+            ^nuroko.module.loss.LossFunction loss-function 
+            (if learn-rate (double (* learn-rate learn-rate-factor)) learn-rate-factor)))
         (updater network))))
 
 ;; ===========================================

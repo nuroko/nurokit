@@ -9,6 +9,8 @@
   (:import [mikera.vectorz AVector Vectorz]))
 
 (ns nuroko.demo.conj)
+(set! *warn-on-reflection* true)
+(set! *unchecked-math* true)
 
 ;; som eutility functions
 (defn feature-img [vector]
@@ -123,11 +125,12 @@
     (connect compressor decompressor)) 
 
   (defn show-reconstructions []
-    (show 
-      (->> (take 100 data)
-           (map (partial think reconstructor)) 
-           (map img)) 
-      :title "100 digits reconstructed"))
+    (let [reconstructor (.clone reconstructor)]
+      (show 
+        (->> (take 100 data)
+          (map (partial think reconstructor)) 
+          (map img)) 
+        :title "100 digits reconstructed")))
   (show-reconstructions) 
 
 
@@ -189,7 +192,8 @@
   
   (task/run 
     {:sleep 1 :repeat 1000}
-    (trainer2 recognition-network ))
+    (trainer2 recognition-network :learn-rate 0.3)) 
+     ;; can tune learn-rate, lower => fine tuning => able to hit better overall accuracy
     
   (task/stop-all)
   
@@ -200,7 +204,11 @@
 
   (recognise (data 0))
   
-  (show (map recognise (take 100 data)) :title "Recognition results") 
+  ;; show results, errors are starred
+  (show (map (fn [l r] (if (= l r) l (str r "*")))
+             (take 100 labels)
+             (map recognise (take 100 data))) 
+        :title "Recognition results") 
    
   (let [rnet (.clone recognition-network)]
     (reduce 
