@@ -42,7 +42,7 @@
 		<dependency>
 			<groupId>com.nuroko</groupId>
 			<artifactId>nurokore</artifactId>
-			<version>0.0.3</version>
+			<version>0.0.4-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>net.mikera</groupId>
@@ -63,7 +63,7 @@
 		<dependency>
 			<groupId>net.mikera</groupId>
 			<artifactId>task</artifactId>
-			<version>0.0.2</version>
+			<version>0.1.0</version>
 		</dependency>
 		<dependency>
 			<groupId>incanter</groupId>
