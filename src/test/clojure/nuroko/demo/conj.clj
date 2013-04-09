@@ -73,7 +73,7 @@
   (def trainer (supervised-trainer net task))
   
   (task/run 
-    {:sleep 1 :repeat 4000}
+    {:sleep 100 :repeat 100} ;; sleep used to slow it down, otherwise trains instantly.....
     (trainer net))
    
   (scrabble-score net \q)
