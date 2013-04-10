@@ -175,15 +175,16 @@
                     toffset (double border)
                     sskip (double (/ (- width (* 2 border)) (max 1.0 (dec layer-inputs))))
                     tskip (double (/ (- width (* 2 border)) (max 1.0 (dec layer-outputs))))]
-                (dotimes [y layer-outputs]
+                (dorun (for [y (sort-by #(hash (* 0.23 %)) (range layer-outputs))]
                   (let [link-count (.getLinkCount layer y)
+                        y (int y)
                         tx (int (+ toffset (* tskip y)))]
                     (dotimes [ii link-count] 
 	                    (let [x (.getLinkSource layer y ii)
                             sx (int (+ soffset (* sskip x)))
                             ii (int ii)]
 	                      (.setColor g ^Color (weight-colour (double (.getLinkWeight layer y ii))))
-	                      (.drawLine g sx sy tx ty)))))))
+	                      (.drawLine g sx sy tx ty))))))))
             (dotimes [i (inc layers)]
               (let [data ^AVector (.getData nn i) 
                     len (.length data) 
