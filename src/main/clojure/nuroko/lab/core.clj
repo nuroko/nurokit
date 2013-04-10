@@ -1,7 +1,7 @@
 (ns nuroko.lab.core
   (:use [clojure.core.matrix])
   (:require [mikera.cljutils.error :refer [error]])
-  (:import [nuroko.core NurokoException IParameterised IComponent ITrainable Components])  
+  (:import [nuroko.core NurokoException ITask IParameterised IComponent ITrainable Components])  
   (:import [nuroko.module AWeightLayer NeuralNet])
   (:require [mikera.vectorz.matrix-api]) 
   (:import [mikera.vectorz Op Ops AVector Vectorz]))
@@ -210,6 +210,20 @@
     (class-coder :values values)))
 
 ;; ==================================================
+;; data manipulation
+
+(defn separate-data 
+  "Separates data into two subsets (presumably training and test).
+   result is of form [[test-data test-labels] [training-data training-labels]]"
+  ([proportion & datasets])
+  (let [n (count (first datasets))
+        t (long (* (double proportion) n))
+        svs (shuffle (apply map vector datasets))
+        [seta setb] (split-at t svs)]
+    [(apply mapv vector seta)
+     (apply mapv vector setb)])) 
+
+;; ==================================================
 ;; Task constructors
 
 (defn example-task [inputs outputs]
@@ -396,7 +410,6 @@
 
 ;; ===========================================
 ;; Evaluation functions
-
 
 (defn evaluate 
   "Evaluates a network gainst a given task"
