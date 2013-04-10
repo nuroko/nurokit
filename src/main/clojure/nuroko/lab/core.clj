@@ -1,7 +1,7 @@
 (ns nuroko.lab.core
   (:use [clojure.core.matrix])
   (:require [mikera.cljutils.error :refer [error]])
-  (:import [nuroko.core NurokoException IParameterised ITrainable Components])  
+  (:import [nuroko.core NurokoException IParameterised IComponent ITrainable Components])  
   (:import [nuroko.module AWeightLayer NeuralNet])
   (:require [mikera.vectorz.matrix-api]) 
   (:import [mikera.vectorz Op Ops AVector Vectorz]))
@@ -350,7 +350,9 @@
 ;; Trainer functions
 
 (defn default-loss-function [network]
-  nuroko.module.loss.SquaredErrorLoss/INSTANCE) 
+  (cond 
+    (instance? IComponent network) (.getDefaultLossFunction ^IComponent network)
+    :else nuroko.module.loss.SquaredErrorLoss/INSTANCE)) 
 
 (defn supervised-trainer 
     [^nuroko.core.ITrainable network task
