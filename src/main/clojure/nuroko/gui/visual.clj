@@ -144,13 +144,14 @@
 
 
 (defn network-graph
-  ([^ALayerStack nn
+  ([nn
     & {:keys [border repaint-speed activation-size line-width] 
        :or {border 20
             repaint-speed 50
             line-width 1
             activation-size 5}}]
-    (let [graph (proxy [javax.swing.JComponent java.awt.event.ActionListener] []
+    (let [^ALayerStack nn (Components/asLayerStack nn)
+          graph (proxy [javax.swing.JComponent java.awt.event.ActionListener] []
         (actionPerformed [^ActionEvent e]
           (.repaint ^JComponent this))
         (paintComponent [^Graphics2D g] 
