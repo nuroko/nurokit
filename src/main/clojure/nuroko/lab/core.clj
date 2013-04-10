@@ -215,13 +215,13 @@
 (defn separate-data 
   "Separates data into two subsets (presumably training and test).
    result is of form [[test-data test-labels] [training-data training-labels]]"
-  ([proportion & datasets])
-  (let [n (count (first datasets))
+  ([proportion & datasets]
+    (let [n (count (first datasets))
         t (long (* (double proportion) n))
         svs (shuffle (apply map vector datasets))
         [seta setb] (split-at t svs)]
     [(apply mapv vector seta)
-     (apply mapv vector setb)])) 
+     (apply mapv vector setb)]))) 
 
 ;; ==================================================
 ;; Task constructors
