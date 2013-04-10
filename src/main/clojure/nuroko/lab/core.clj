@@ -133,6 +133,9 @@
       (.getInput task v i)
       (error "Getting indexed input only works on ExampleTask"))))
 
+(defn get-example-count [^ITask task]
+  (.getExampleCount task))
+
 ;; ===========================================
 ;; training session
 
@@ -248,14 +251,30 @@
 (defn weight-layer
   "Creates a weight layer for a neural network"
   (^nuroko.module.AWeightLayer [& {:keys [inputs outputs max-links] 
-                                  :or {max-links Integer/MAX_VALUE}}]
-    (if-not outputs (error "Needs :outputs parameter (number of output values)"))
+                                   :or {max-links Integer/MAX_VALUE}}]
+    (or inputs (error "Needs :outputs parameter (number of output values)"))
+    (or outputs (error "Needs :outputs parameter (number of output values)"))
     (Components/weightLayer (int inputs) (int outputs) (int max-links))))
+
+(defn neural-layer
+  "Creates a single-layer neural network"
+  (^nuroko.core.IComponent [& {:keys [inputs outputs max-links 
+                                      output-op]}]
+    (if-not inputs (error "No :inputs length specified!")) 
+    (if-not outputs (error "No :outputs length specified!")) 
+    (let [max-links (or max-links java.lang.Integer/MAX_VALUE)
+          ^Op op (or output-op Ops/LINEAR)
+          ^AWeightLayer wl (weight-layer :inputs inputs :outputs outputs :max-links max-links)] 
+      (.initRandom wl)  
+      (NeuralNet. wl op))))
 
 
 (defn neural-network 
   "Creates a standard neural network"
-  (^nuroko.module.NeuralNet [& {:keys [inputs outputs layers max-links hidden-op output-op hidden-sizes dropout] 
+  (^nuroko.module.NeuralNet [& {:keys [inputs outputs layers hidden-sizes 
+                                       max-links 
+                                       hidden-op output-op 
+                                       dropout hidden-dropout input-noise] 
                                   :as options
                                   :or {layers 3
                                        output-op Ops/LOGISTIC
@@ -407,7 +426,8 @@
     & {:keys [iterations probabilistic] 
        :or {iterations 100
             probabilistic false}}]
-    (let [network (.clone network)
+    (let [iterations (long (min iterations (get-example-count task)))
+          network (.clone network)
           task (.clone task)
           result (atom 0.0)
           input-length (int (task-input-length task))
