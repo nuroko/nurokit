@@ -223,7 +223,7 @@
   ([proportion & datasets]
     (let [n (count (first datasets))
         t (long (* (double proportion) n))
-        svs (shuffle-seeded (apply map vector datasets) 1000)
+        svs (shuffle-seeded (apply map vector datasets) 11)
         [seta setb] (split-at t svs)]
     [(apply mapv vector seta)
      (apply mapv vector setb)]))) 
