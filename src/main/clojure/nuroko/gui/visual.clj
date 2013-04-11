@@ -220,7 +220,7 @@
   ([calcs
     & {:keys [repaint-speed time-periods y-min y-max] 
        :or {repaint-speed 250
-            time-periods 240}}]
+            time-periods 1200}}]
     (let [line-count (count calcs)
           start-millis (System/currentTimeMillis)
           times (atom '())

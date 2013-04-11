@@ -332,12 +332,12 @@
   "Creates a training algorithm that improves a neural network for the given task"
   ([^nuroko.core.IParameterised network
     & {:keys [momentum-factor learn-rate] 
-       :or {momentum-factor 0.9
+       :or {momentum-factor 0.99
             learn-rate 1.0}}]
     (let [parameter-length (.getParameterLength ^IParameterised network)
           ^AVector last-update (Vectorz/newVector parameter-length)
           momentum-factor (double momentum-factor)
-          learn-factor (double (* 0.01 learn-rate))]
+          learn-factor (double (* 0.001 learn-rate))]
       (fn [^nuroko.core.IParameterised network]
         (let [^AVector gradient (get-gradient network)
               ^AVector parameters (get-parameters network)] 
