@@ -212,13 +212,18 @@
 ;; ==================================================
 ;; data manipulation
 
+(defn shuffle-seeded [coll seed]
+  (let [lst (java.util.ArrayList. ^java.util.Collection (vec coll))]
+    (java.util.Collections/shuffle lst (java.util.Random. (long seed)))
+    (vec lst)))
+
 (defn separate-data 
   "Separates data into two subsets (presumably training and test).
    result is of form [[test-data test-labels] [training-data training-labels]]"
   ([proportion & datasets]
     (let [n (count (first datasets))
         t (long (* (double proportion) n))
-        svs (shuffle (apply map vector datasets))
+        svs (shuffle-seeded (apply map vector datasets) 1000)
         [seta setb] (split-at t svs)]
     [(apply mapv vector seta)
      (apply mapv vector setb)]))) 
