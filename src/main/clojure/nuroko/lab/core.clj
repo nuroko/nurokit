@@ -2,8 +2,8 @@
   (:use [clojure.core.matrix])
   (:require [mikera.cljutils.error :refer [error]])
   (:import [nuroko.core NurokoException ITask IParameterised IComponent ITrainable Components])  
-  (:import [nuroko.module AWeightLayer NeuralNet])
-  (:require [mikera.vectorz.matrix-api]) 
+  (:import [nuroko.module AWeightLayer NeuralNet AComponent])
+  (:require [mikera.vectorz.core]) 
   (:import [mikera.vectorz Op Ops AVector Vectorz]))
 
 (set! *warn-on-reflection* true)
@@ -328,6 +328,19 @@
     (Components/stack ^java.util.List (vec nets))))
 
 (def connect stack) 
+
+;; ===========================================
+;; utility functions and modifiers
+
+(defn learn-factor 
+  "Gets the learning factor for a component (default is 1.0)"
+  ([^IComponent c]
+    (.getLearnFactor c))) 
+
+(defn adjust-learn-factor! 
+  "Adjusts the learning factor of a compoenent by a scale factor."
+  ([^AComponent c ^double scale]
+    (.setLearnFactor c (* scale (.getLearnFactor c))))) 
 
 ;; ===========================================
 ;; Weight update algorithms
