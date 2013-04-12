@@ -10,7 +10,7 @@
 
 (ns nuroko.demo.conj)
 
-;; som eutility functions
+;; some utility functions
 (defn feature-img [vector]
   ((image-generator :width 28 :height 28 :colour-function weight-colour-mono) vector))  
 
@@ -135,7 +135,7 @@
   (def trainer (supervised-trainer reconstructor compress-task))
   
 	(task/run 
-    {:sleep 1 :repeat 100}
+    {:sleep 1 :repeat 200}
     (do 
       (trainer reconstructor)
       (show-reconstructions)))
@@ -160,7 +160,7 @@
   (def recogniser
     (neural-network :inputs INNER_SIZE  
 	                  :outputs 10
-                    :layers 3))
+                    :layers 2))
   
   (def recognition-network 
     (connect compressor recogniser))
