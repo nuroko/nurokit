@@ -334,7 +334,7 @@
 
 
 (defn backprop-updater
-  "Creates a training algorithm that improves a neural network for the given task"
+  "Creates a stateful backprop training updater that improves a neural network for the given task"
   ([^nuroko.core.IParameterised network
     & {:keys [momentum-factor learn-rate] 
        :or {momentum-factor 0.99
@@ -348,12 +348,10 @@
               ^AVector parameters (get-parameters network)] 
 	        (.multiply last-update momentum-factor)
 	        (.addMultiple last-update gradient learn-factor)
-	        (.add parameters last-update)
-	        
-	        (.fill gradient 0.0))))))
+	        (.add parameters last-update))))))
 
 (defn rmsprop-updater
-  "Creates a trainer session that improves a neural network for the given task"
+  "Creates a stateful rmsprop training updater that improves a neural network for the given task"
   ([^nuroko.core.IParameterised network
     & {:keys [momentum-factor learn-rate max-rms-factor rms-decay] 
        :or {momentum-factor 0.9
@@ -380,9 +378,7 @@
 	 
 	        (.multiply last-update momentum-factor)
 	        (.addProduct last-update gradient temp (* learn-rate 1.0))
-	        (.add parameters last-update)
-	        
-	        (.fill gradient 0.0))))))
+	        (.add parameters last-update))))))
 
 ;; ===========================================
 ;; Trainer functions
@@ -405,6 +401,7 @@
           target (Vectorz/newVector output-length)
           learn-rate-factor (double learn-rate)] 
       (fn [^nuroko.core.ITrainable network & {:keys [learn-rate]}]
+        (.fill ^AVector (get-gradient network) 0.0)
         (dotimes [i (long batch-size)]
           (get-input task input)
           (get-target task input target)
