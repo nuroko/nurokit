@@ -91,6 +91,11 @@
 			<artifactId>core.matrix</artifactId>
 			<version>0.5.0</version>
 		</dependency>
+		<dependency>
+			<groupId>net.mikera</groupId>
+			<artifactId>core.matrix.stats</artifactId>
+			<version>0.0.1</version>
+		</dependency>
 	</dependencies>
 	<name>Nurokit</name>
 </project>
