@@ -289,12 +289,13 @@
 (defn neural-layer
   "Creates a single-layer neural network"
   (^nuroko.core.IComponent [& {:keys [inputs outputs max-links 
-                                      output-op]}]
+                                      output-op]
+                               :as options}]
     (if-not inputs (error "No :inputs length specified!")) 
     (if-not outputs (error "No :outputs length specified!")) 
-    (let [max-links (or max-links java.lang.Integer/MAX_VALUE)
+    (let [options (assoc options :max-links (or max-links java.lang.Integer/MAX_VALUE))
           ^Op op (or output-op Ops/LINEAR)
-          ^AWeightLayer wl (weight-layer :inputs inputs :outputs outputs :max-links max-links)] 
+          ^AWeightLayer wl (apply-kw weight-layer options)] 
       (.initRandom wl)  
       (NeuralNet. wl op))))
 
