@@ -1,5 +1,6 @@
 (ns nuroko.lab.core
   (:use [clojure.core.matrix])
+  (:require [mikera.cljutils.core :refer [apply-kw]])
   (:require [mikera.cljutils.error :refer [error]])
   (:import [nuroko.core NurokoException ITask IParameterised IComponent ITrainable Components])  
   (:import [nuroko.module AWeightLayer NeuralNet AComponent])
@@ -267,19 +268,23 @@
       (vector? x) (Vectorz/create ^java.util.List x)
       :else (Vectorz/create ^java.util.List (vec x)))))
 
+(defn weight-length-constraint [max-length]
+  (nuroko.module.layers.Constraints/weightLength (double max-length)))
+
 (defn weight-layer
   "Creates a weight layer for a neural network"
   (^nuroko.module.AWeightLayer [& {:keys [inputs outputs 
                                           max-links
                                           max-weight-length] 
+                                   :as options
                                    :or {max-links Integer/MAX_VALUE
                                         max-weight-length 5.0}}]
     (or inputs (error "Needs :outputs parameter (number of output values)"))
     (or outputs (error "Needs :outputs parameter (number of output values)"))
     (let [layer (Components/weightLayer (int inputs) (int outputs) (int max-links))]
-      (when max-weight-length
-        (.setConstraint layer (nuroko.module.layers.Contraints/weightLength (double max-weight-length)))))
-    ))
+      (when (contains? options :max-weight-length)
+        (.setConstraint layer (weight-length-constraint max-weight-length)))
+      layer)))
 
 (defn neural-layer
   "Creates a single-layer neural network"
