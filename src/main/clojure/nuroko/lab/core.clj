@@ -303,7 +303,7 @@
 (defn neural-network 
   "Creates a standard neural network"
   (^nuroko.module.NeuralNet [& {:keys [inputs outputs layers hidden-sizes 
-                                       max-links 
+                                       max-links max-weight-length
                                        hidden-op output-op 
                                        dropout hidden-dropout input-noise] 
                                   :as options
@@ -322,9 +322,11 @@
       (dotimes [i layers]
         (let [] 
           (aset layer-array (int i) 
-                (weight-layer :inputs (sizes i) 
-                              :outputs (sizes (inc i)) 
-                              :max-links (or max-links (sizes i))))))
+                (apply-kw weight-layer 
+                          :inputs (sizes i) 
+                          :outputs (sizes (inc i)) 
+                          :max-links (or max-links (sizes i))
+                          options))))
       (let [nn (NeuralNet. layer-array hidden-op output-op)]
         (.initRandom nn)
         (if dropout
