@@ -269,11 +269,17 @@
 
 (defn weight-layer
   "Creates a weight layer for a neural network"
-  (^nuroko.module.AWeightLayer [& {:keys [inputs outputs max-links] 
-                                   :or {max-links Integer/MAX_VALUE}}]
+  (^nuroko.module.AWeightLayer [& {:keys [inputs outputs 
+                                          max-links
+                                          max-weight-length] 
+                                   :or {max-links Integer/MAX_VALUE
+                                        max-weight-length 5.0}}]
     (or inputs (error "Needs :outputs parameter (number of output values)"))
     (or outputs (error "Needs :outputs parameter (number of output values)"))
-    (Components/weightLayer (int inputs) (int outputs) (int max-links))))
+    (let [layer (Components/weightLayer (int inputs) (int outputs) (int max-links))]
+      (when max-weight-length
+        (.setConstraint layer (nuroko.module.layers.Contraints/weightLength (double max-weight-length)))))
+    ))
 
 (defn neural-layer
   "Creates a single-layer neural network"
