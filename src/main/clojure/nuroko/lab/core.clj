@@ -4,6 +4,7 @@
   (:require [mikera.cljutils.error :refer [error]])
   (:import [nuroko.core NurokoException ITask IParameterised IComponent ITrainable Components])  
   (:import [nuroko.module AWeightLayer NeuralNet AComponent])
+  (:import [nuroko.module.ops ScaledLogistic])
   (:require [mikera.vectorz.core]) 
   (:import [mikera.vectorz Op Ops AVector Vectorz]))
 
@@ -308,7 +309,7 @@
                                        dropout hidden-dropout input-noise] 
                                   :as options
                                   :or {layers 3
-                                       output-op Ops/LOGISTIC
+                                       output-op ScaledLogistic/INSTANCE
                                        hidden-op Ops/TANH}}]
  ;;   (println (str "NN: " options)) 
     (if-not inputs (error "No :inputs length specified!")) 
