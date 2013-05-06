@@ -108,18 +108,23 @@
   (def compress-task (identity-task data)) 
   
   (def compressor 
-	  (neural-network :inputs 784 
-	                  :outputs INNER_SIZE
-                    :layers 1
-                    :output-op Ops/LOGISTIC
-                    :dropout 0.5))
+	  (stack
+      ;;(offset :length 784 :delta -0.5)
+      (neural-network :inputs 784 
+	                    :outputs INNER_SIZE
+                      :layers 1
+                      :max-weight-length 4.0      
+                      :output-op Ops/LOGISTIC
+                      :dropout 0.5)))
   
   (def decompressor 
-	  (neural-network :inputs INNER_SIZE  
-	                  :outputs 784
-                    :max-weight-length 4.0
-                    :output-op Ops/LOGISTIC
-                    :layers 1))
+	  (stack 
+      (offset :length INNER_SIZE :delta -0.5)
+      (neural-network :inputs INNER_SIZE  
+	                    :outputs 784
+                      :max-weight-length 4.0
+                      :output-op Ops/LOGISTIC
+                      :layers 1)))
   
   (def reconstructor 
     (connect compressor decompressor)) 
@@ -157,10 +162,12 @@
  	    :output-coder num-coder))
   
   (def recogniser
-    (neural-network :inputs INNER_SIZE  
+    (stack
+      (offset :length INNER_SIZE :delta -0.5)
+      (neural-network :inputs INNER_SIZE  
                     :output-op Ops/LOGISTIC
 	                  :outputs 10
-                    :layers 1))
+                    :layers 2)))
   
   (def recognition-network 
     (connect compressor recogniser))

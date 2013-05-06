@@ -256,6 +256,12 @@
     
 
 ;; ===================================================
+;; Component utility functions
+
+(defn components [^IComponent comp]
+  (.getComponents comp)) 
+
+;; ===================================================
 ;; Object constructors
 
 (def DOUBLE-CLASS (Class/forName "[D"))
@@ -300,6 +306,10 @@
       (.initRandom wl)  
       (NeuralNet. wl op))))
 
+(defn offset 
+  "Creates an offset component"
+  (^IComponent [& {:keys [length delta]}]
+    (Components/offset (int length) (double delta))))
 
 (defn neural-network 
   "Creates a standard neural network"
@@ -428,7 +438,7 @@
           input (Vectorz/newVector input-length)
           target (Vectorz/newVector output-length)
           learn-rate-factor (double learn-rate)] 
-      (fn [^nuroko.core.ITrainable network & {:keys [learn-rate]}]
+      (fn [^nuroko.core.IComponent network & {:keys [learn-rate]}]
         (.fill ^AVector (get-gradient network) 0.0)
         (dotimes [i (long batch-size)]
           (get-input task input)
@@ -436,7 +446,8 @@
           (.train network input target 
             ^nuroko.module.loss.LossFunction loss-function 
             (if learn-rate (double (* learn-rate learn-rate-factor)) learn-rate-factor)))
-        (updater network))))
+        (updater network)
+        (.applyConstraints network))))
 
 ;; ===========================================
 ;; Evaluation functions
