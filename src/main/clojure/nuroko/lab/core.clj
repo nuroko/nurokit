@@ -365,7 +365,7 @@
   "Creates a stateful backprop training updater that improves a neural network for the given task"
   ([^nuroko.core.IParameterised network
     & {:keys [momentum-factor learn-rate] 
-       :or {momentum-factor 0.99
+       :or {momentum-factor 0.95
             learn-rate 1.0}}]
     (let [parameter-length (.getParameterLength ^IParameterised network)
           ^AVector last-update (Vectorz/newVector parameter-length)

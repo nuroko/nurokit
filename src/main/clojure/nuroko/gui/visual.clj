@@ -145,7 +145,7 @@
 
 (defn network-graph
   ([nn
-    & {:keys [border repaint-speed activation-size line-width] 
+    & {:keys [border repaint-speed activation-size line-width max-nodes-displayed] 
        :or {border 20
             repaint-speed 50
             line-width 1
@@ -160,7 +160,9 @@
                 width (double (.getWidth this))
                 height (double (.getHeight this))
                 layers (.getLayerCount nn)
-                max-size (max (input-length nn) (reduce max (map #(.getOutputLength ^AWeightLayer %) (.getLayers nn))))
+                sizes (vec (cons (input-length nn) (map #(.getOutputLength ^AWeightLayer %) (.getLayers nn)))) 
+                sizes (if max-nodes-displayed (mapv #(min max-nodes-displayed %) sizes) sizes) 
+                max-size (reduce max sizes)
                 step (/ (double width) max-size)
                 as (double activation-size)]
             (.setColor g (Color/BLACK))
@@ -168,15 +170,15 @@
             (.setStroke g (java.awt.BasicStroke. (float line-width))) 
             (dotimes [i layers]
               (let [layer (.getLayer nn i)
-                    layer-inputs (.getInputLength layer)
-                    layer-outputs (.getOutputLength layer)
+                    layer-inputs (long (if max-nodes-displayed (sizes i) (.getInputLength layer)))
+                    layer-outputs (long (if max-nodes-displayed (sizes (inc i)) (.getOutputLength layer))) 
                     sy (int (+ border (* (- height (* 2 border)) (/ (- layers 0.0 i) layers))))
                     ty (int (+ border (* (- height (* 2 border)) (/ (- layers 1.0 i) layers))))
                     soffset (double border)
                     toffset (double border)
                     sskip (double (/ (- width (* 2 border)) (max 1.0 (dec layer-inputs))))
                     tskip (double (/ (- width (* 2 border)) (max 1.0 (dec layer-outputs))))]
-                (dorun (for [y (sort-by #(hash (* 0.23 %)) (range layer-outputs))]
+                (dorun (for [y (sort-by #(hash (* 0.23 %)) (range layer-outputs))] ;; random order of drawing
                   (let [link-count (.getLinkCount layer y)
                         y (int y)
                         tx (int (+ toffset (* tskip y)))]
@@ -184,11 +186,12 @@
 	                    (let [x (.getLinkSource layer y ii)
                             sx (int (+ soffset (* sskip x)))
                             ii (int ii)]
-	                      (.setColor g ^Color (weight-colour (double (.getLinkWeight layer y ii))))
-	                      (.drawLine g sx sy tx ty))))))))
+	                      (when (< x layer-inputs)
+                          (.setColor g ^Color (weight-colour (double (.getLinkWeight layer y ii))))
+	                        (.drawLine g sx sy tx ty)))))))))
             (dotimes [i (inc layers)]
               (let [data ^AVector (.getData nn i) 
-                    len (.length data) 
+                    len (sizes i) 
                     ty (int (+ border (* (- height (* 2 border)) (/ (- layers i) layers))))
                     toffset (double border)
                     tskip (double (/ (- width (* 2 border)) (max 1.0 (dec len))))]

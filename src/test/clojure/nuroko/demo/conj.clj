@@ -117,6 +117,8 @@
   (def decompressor 
 	  (neural-network :inputs INNER_SIZE  
 	                  :outputs 784
+                    :max-weight-length 4.0
+                    :output-op Ops/LOGISTIC
                     :layers 1))
   
   (def reconstructor 
@@ -131,14 +133,11 @@
         :title "100 digits reconstructed")))
   (show-reconstructions) 
 
-
   (def trainer (supervised-trainer reconstructor compress-task))
   
 	(task/run 
-    {:sleep 1 :repeat 200}
-    (do 
-      (trainer reconstructor)
-      (show-reconstructions)))
+    {:sleep 1 :repeat true}
+    (do (trainer reconstructor) (show-reconstructions)))
     
   (task/stop-all)
  
@@ -159,8 +158,9 @@
   
   (def recogniser
     (neural-network :inputs INNER_SIZE  
+                    :output-op Ops/LOGISTIC
 	                  :outputs 10
-                    :layers 2))
+                    :layers 1))
   
   (def recognition-network 
     (connect compressor recogniser))
@@ -189,8 +189,8 @@
         :title "Error rate")
   
   (task/run 
-    {:sleep 1 :repeat 1000}
-    (trainer2 recognition-network :learn-rate 0.3)) 
+    {:sleep 1 :repeat true}
+    (trainer2 recognition-network :learn-rate 0.1)) 
      ;; can tune learn-rate, lower => fine tuning => able to hit better overall accuracy
     
   (task/stop-all)
