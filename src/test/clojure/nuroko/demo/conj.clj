@@ -115,7 +115,8 @@
                       :layers 1
                       :max-weight-length 4.0      
                       :output-op Ops/LOGISTIC
-                      :dropout 0.5)))
+                     ;; :dropout 0.5
+                      )))
   
   (def decompressor 
 	  (stack 
@@ -174,7 +175,7 @@
   
   (def trainer2 (supervised-trainer recognition-network 
                                     recognition-task 
-                                    :loss-function nuroko.module.loss.CrossEntropyLoss/INSTANCE
+                                    ;;:loss-function nuroko.module.loss.CrossEntropyLoss/INSTANCE
                                     :learn-rate 0.1
                                    ))
 
