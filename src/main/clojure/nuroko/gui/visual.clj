@@ -329,6 +329,11 @@
           cps (map #(class-point (think t %)) inputs)]
       (incanter.charts/scatter-plot (map first cps) (map second cps) :group-by classes))))
 
+(defn vector-bars
+  "Draws a bar chart of the values in a vector"
+  ([v]
+    (let [n (ecount v)]
+      (incanter.charts/bar-chart (range n) (eseq v)))))
 
 ;; DEMO CODE
 

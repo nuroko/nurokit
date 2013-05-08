@@ -113,7 +113,7 @@
       (neural-network :inputs 784 
 	                    :outputs INNER_SIZE
                       :layers 1
-                      :max-weight-length 4.0      
+                     ;; :max-weight-length 4.0      
                       :output-op Ops/LOGISTIC
                      ;; :dropout 0.5
                       )))
@@ -123,7 +123,7 @@
       (offset :length INNER_SIZE :delta -0.5)
       (neural-network :inputs INNER_SIZE  
 	                    :outputs 784
-                      :max-weight-length 4.0
+                     ;; :max-weight-length 4.0
                       :output-op Ops/LOGISTIC
                       :layers 1)))
   
