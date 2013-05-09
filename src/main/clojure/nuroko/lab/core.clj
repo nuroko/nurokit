@@ -3,7 +3,7 @@
   (:require [mikera.cljutils.core :refer [apply-kw]])
   (:require [mikera.cljutils.error :refer [error]])
   (:import [nuroko.core NurokoException ITask IParameterised IComponent ITrainable Components])  
-  (:import [nuroko.module AWeightLayer NeuralNet AComponent])
+  (:import [nuroko.module AWeightLayer NeuralNet AComponent Sparsifier])
   (:import [nuroko.module.ops ScaledLogistic])
   (:require [mikera.vectorz.core]) 
   (:import [mikera.vectorz Op Ops AVector Vectorz]))
@@ -311,6 +311,13 @@
   (^IComponent [& {:keys [length delta]}]
     (Components/offset (int length) (double delta))))
 
+(defn sparsifier 
+  "Creates an offset component"
+  (^IComponent [& {:keys [length target-mean weight]
+                   :or {target-mean 0.1
+                        weight 0.1}}]
+    (Sparsifier. (int length) (double target-mean) (double weight))))
+
 (defn neural-network 
   "Creates a standard neural network"
   (^nuroko.module.NeuralNet [& {:keys [inputs outputs layers hidden-sizes 
@@ -386,7 +393,9 @@
               ^AVector parameters (get-parameters network)] 
 	        (.multiply last-update momentum-factor)
 	        (.addMultiple last-update gradient learn-factor)
-	        (.add parameters last-update))))))
+	        (.add parameters last-update)
+         ;(.addMultiple parameters gradient learn-factor)
+         )))))
 
 (defn rmsprop-updater
   "Creates a stateful rmsprop training updater that improves a neural network for the given task"
