@@ -116,7 +116,8 @@
                      ;; :max-weight-length 4.0      
                       :output-op Ops/LOGISTIC
                      ;; :dropout 0.5
-                      )))
+                      )
+      (sparsifier :length INNER_SIZE)))
   
   (def decompressor 
 	  (stack 
@@ -198,7 +199,7 @@
   
   (task/run 
     {:sleep 1 :repeat true}
-    (trainer2 recognition-network :learn-rate 0.1)) 
+    (trainer2 recognition-network :learn-rate 1.0)) 
      ;; can tune learn-rate, lower => fine tuning => able to hit better overall accuracy
     
   (task/stop-all)
