@@ -76,7 +76,8 @@
           colour-function (or colour-function mono-rgb) 
           size (* width height)]
       (fn [v]
-		      (let [^AVector v (if (instance? AVector v) v (nuroko.lab.core/avector v))
+		      (let [v? (instance? AVector v)
+                ^AVector v (if v? v (nuroko.lab.core/avector v))
                 ^BufferedImage bi (mc.image/buffered-image width height)
                 ^ints data (int-array size)]
 	         (dotimes [y height]
@@ -96,6 +97,22 @@
           height (quot vlen width)
           colour-function (or colour-function weight-colour-rgb)]
       ((image-generator :width width :height height :colour-function colour-function) vector))))  
+
+(defn spatio [vs & {:keys [colour-function] }]
+  (let [vs (mapv (fn [v] (if (instance? AVector v) v (nuroko.lab.core/avector v))) vs)
+        colour-function (or colour-function mono-rgb) 
+        width (.length ^AVector (nth vs 0))
+        height (count vs)
+        ^BufferedImage bi (mc.image/buffered-image width height)
+        ^ints data (int-array (* width height))]
+    (dotimes [y height]
+      (let [v (nth vs y)
+            yo (int (* y width))] 
+        (dotimes [x width]
+          (aset data (+ x yo) (let [cv (.get ^AVector v (int x))] 
+                                (int (colour-function cv)))))))
+    (.setDataElements (.getRaster bi) (int 0) (int 0) width height data)
+	  bi))
 
 (defn label 
   "Creates a JLabel with the given content"
