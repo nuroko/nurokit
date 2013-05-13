@@ -284,8 +284,7 @@
                                           max-links
                                           max-weight-length] 
                                    :as options
-                                   :or {max-links Integer/MAX_VALUE
-                                        max-weight-length 5.0}}]
+                                   :or {max-links Integer/MAX_VALUE}}]
     (or inputs (error "Needs :outputs parameter (number of output values)"))
     (or outputs (error "Needs :outputs parameter (number of output values)"))
     (let [layer (Components/weightLayer (int inputs) (int outputs) (int max-links))]
@@ -382,7 +381,7 @@
   "Creates a stateful backprop training updater that improves a neural network for the given task"
   ([^nuroko.core.IParameterised network
     & {:keys [momentum-factor learn-rate] 
-       :or {momentum-factor 0.9
+       :or {momentum-factor 0.75
             learn-rate 1.0}}]
     (let [parameter-length (.getParameterLength ^IParameterised network)
           ^AVector last-update (Vectorz/newVector parameter-length)
@@ -401,7 +400,7 @@
   "Creates a stateful rmsprop training updater that improves a neural network for the given task"
   ([^nuroko.core.IParameterised network
     & {:keys [momentum-factor learn-rate max-rms-factor rms-decay] 
-       :or {momentum-factor 0.9
+       :or {momentum-factor 0.75
             learn-rate 1.0
             max-rms-factor 20.0
             rms-decay 0.95}}]

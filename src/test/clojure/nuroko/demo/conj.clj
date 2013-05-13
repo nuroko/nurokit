@@ -5,6 +5,7 @@
   (:require [task.core :as task])
   (:require [nuroko.data mnist])
   (:import [mikera.vectorz Op Ops])
+  (:import [mikera.vectorz.ops ScaledLogistic Logistic Tanh])
   (:import [nuroko.coders CharCoder])
   (:import [mikera.vectorz AVector Vectorz]))
 
@@ -42,6 +43,8 @@
 	(def net 
 	  (neural-network :inputs 26 
 	                  :outputs 4
+                    :hidden-op ScaledLogistic/INSTANCE 
+                    :output-op ScaledLogistic/INSTANCE 
 	                  :hidden-sizes [6]))
   
   (show (network-graph net :line-width 2) 
@@ -61,8 +64,7 @@
     (let [net (.clone net)
           chars (keys scores)]
       (count (for [c chars 
-         :when (= (scrabble-score net c)
-                  (scores c))] c))))  
+                   :when (= (scrabble-score net c) (scores c))] c))))  
     
   (show (time-chart 
           [#(evaluate-scores net)] 
@@ -73,7 +75,7 @@
   (def trainer (supervised-trainer net task))
   
   (task/run 
-    {:sleep 50 :repeat 200} ;; sleep used to slow it down, otherwise trains instantly.....
+    {:sleep 10 :repeat 200} ;; sleep used to slow it down, otherwise trains instantly.....
     (trainer net))
    
   (scrabble-score net \q)
