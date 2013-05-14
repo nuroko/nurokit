@@ -376,6 +376,7 @@
 ;; ===========================================
 ;; Weight update algorithms
 
+(def lu (atom nil))
 
 (defn backprop-updater
   "Creates a stateful backprop training updater that improves a neural network for the given task"
@@ -393,6 +394,7 @@
 	        (.multiply last-update momentum-factor)
 	        (.addMultiple last-update gradient learn-factor)
 	        (.add parameters last-update)
+          (reset! lu last-update)
          ;(.addMultiple parameters gradient learn-factor)
          )))))
 
@@ -400,7 +402,7 @@
   "Creates a stateful rmsprop training updater that improves a neural network for the given task"
   ([^nuroko.core.IParameterised network
     & {:keys [momentum-factor learn-rate max-rms-factor rms-decay] 
-       :or {momentum-factor 0.75
+       :or {momentum-factor 0.9
             learn-rate 1.0
             max-rms-factor 20.0
             rms-decay 0.95}}]

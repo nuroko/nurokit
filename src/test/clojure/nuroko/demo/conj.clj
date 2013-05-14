@@ -43,8 +43,8 @@
 	(def net 
 	  (neural-network :inputs 26 
 	                  :outputs 4
-                    :hidden-op ScaledLogistic/INSTANCE 
-                    :output-op ScaledLogistic/INSTANCE 
+                    :hidden-op Ops/LOGISTIC 
+                    :output-op Ops/LOGISTIC
 	                  :hidden-sizes [6]))
   
   (show (network-graph net :line-width 2) 
@@ -72,10 +72,10 @@
         :title "Correct letters")
    
   ;; training algorithm
-  (def trainer (supervised-trainer net task))
+  (def trainer (supervised-trainer net task :batch-size 100))
   
   (task/run 
-    {:sleep 10 :repeat 200} ;; sleep used to slow it down, otherwise trains instantly.....
+    {:sleep 1 :repeat 1000} ;; sleep used to slow it down, otherwise trains instantly.....
     (trainer net))
    
   (scrabble-score net \q)
@@ -179,7 +179,6 @@
   (def trainer2 (supervised-trainer recognition-network 
                                     recognition-task 
                                     ;;:loss-function nuroko.module.loss.CrossEntropyLoss/INSTANCE
-                                    :learn-rate 0.1
                                    ))
 
   ;; test data and task - 10,000 cases
@@ -201,7 +200,7 @@
   
   (task/run 
     {:sleep 1 :repeat true}
-    (trainer2 recognition-network :learn-rate 1.0)) 
+    (trainer2 recognition-network :learn-rate 0.1)) 
      ;; can tune learn-rate, lower => fine tuning => able to hit better overall accuracy
     
   (task/stop-all)

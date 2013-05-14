@@ -274,6 +274,7 @@
        :or {x-index 0
             y-index 1}}]
     (let [res (map (fn [^mikera.vectorz.AVector v] [(.get v (int x-index)) (.get v (int y-index))]) data)
+          labels labels
           xs (map first res)
           ys (map second res)
           scatter-chart (incanter.charts/scatter-plot xs ys :group-by labels)
