@@ -144,7 +144,7 @@
 (show (network-graph net :line-width 2) 
         :title "Neural Net : HealthUp")
   
-(dotimes [i 100000]
+(dotimes [i 10000]
   (let [dat @DATA
         pos (+ 73 (rand-int (- (count dat) 73)))]
     (.fill (.getGradient net) 0.0)
