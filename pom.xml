@@ -96,6 +96,11 @@
 			<artifactId>core.matrix.stats</artifactId>
 			<version>0.0.1</version>
 		</dependency>
+		<dependency>
+			<groupId>org.clojure</groupId>
+			<artifactId>data.csv</artifactId>
+			<version>0.1.2</version>
+		</dependency>
 	</dependencies>
 	<name>Nurokit</name>
 </project>
