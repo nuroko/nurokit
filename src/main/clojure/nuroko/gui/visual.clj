@@ -76,7 +76,8 @@
           colour-function (or colour-function mono-rgb) 
           size (* width height)]
       (fn [v]
-		      (let [^AVector v (if (instance? AVector v) v (nuroko.lab.core/avector v))
+		      (let [v? (instance? AVector v)
+                ^AVector v (if v? v (nuroko.lab.core/avector v))
                 ^BufferedImage bi (mc.image/buffered-image width height)
                 ^ints data (int-array size)]
 	         (dotimes [y height]
@@ -96,6 +97,22 @@
           height (quot vlen width)
           colour-function (or colour-function weight-colour-rgb)]
       ((image-generator :width width :height height :colour-function colour-function) vector))))  
+
+(defn spatio [vs & {:keys [colour-function] }]
+  (let [vs (mapv (fn [v] (if (instance? AVector v) v (nuroko.lab.core/avector v))) vs)
+        colour-function (or colour-function mono-rgb) 
+        width (.length ^AVector (nth vs 0))
+        height (count vs)
+        ^BufferedImage bi (mc.image/buffered-image width height)
+        ^ints data (int-array (* width height))]
+    (dotimes [y height]
+      (let [v (nth vs y)
+            yo (int (* y width))] 
+        (dotimes [x width]
+          (aset data (+ x yo) (let [cv (.get ^AVector v (int x))] 
+                                (int (colour-function cv)))))))
+    (.setDataElements (.getRaster bi) (int 0) (int 0) width height data)
+	  bi))
 
 (defn label 
   "Creates a JLabel with the given content"
@@ -144,13 +161,14 @@
 
 
 (defn network-graph
-  ([^ALayerStack nn
-    & {:keys [border repaint-speed activation-size line-width] 
+  ([nn
+    & {:keys [border repaint-speed activation-size line-width max-nodes-displayed] 
        :or {border 20
             repaint-speed 50
             line-width 1
             activation-size 5}}]
-    (let [graph (proxy [javax.swing.JComponent java.awt.event.ActionListener] []
+    (let [^ALayerStack nn (Components/asLayerStack nn)
+          graph (proxy [javax.swing.JComponent java.awt.event.ActionListener] []
         (actionPerformed [^ActionEvent e]
           (.repaint ^JComponent this))
         (paintComponent [^Graphics2D g] 
@@ -159,7 +177,9 @@
                 width (double (.getWidth this))
                 height (double (.getHeight this))
                 layers (.getLayerCount nn)
-                max-size (max (input-length nn) (reduce max (map #(.getOutputLength ^AWeightLayer %) (.getLayers nn))))
+                sizes (vec (cons (input-length nn) (map #(.getOutputLength ^AWeightLayer %) (.getLayers nn)))) 
+                sizes (if max-nodes-displayed (mapv #(min max-nodes-displayed %) sizes) sizes) 
+                max-size (reduce max sizes)
                 step (/ (double width) max-size)
                 as (double activation-size)]
             (.setColor g (Color/BLACK))
@@ -167,26 +187,28 @@
             (.setStroke g (java.awt.BasicStroke. (float line-width))) 
             (dotimes [i layers]
               (let [layer (.getLayer nn i)
-                    layer-inputs (.getInputLength layer)
-                    layer-outputs (.getOutputLength layer)
+                    layer-inputs (long (if max-nodes-displayed (sizes i) (.getInputLength layer)))
+                    layer-outputs (long (if max-nodes-displayed (sizes (inc i)) (.getOutputLength layer))) 
                     sy (int (+ border (* (- height (* 2 border)) (/ (- layers 0.0 i) layers))))
                     ty (int (+ border (* (- height (* 2 border)) (/ (- layers 1.0 i) layers))))
                     soffset (double border)
                     toffset (double border)
                     sskip (double (/ (- width (* 2 border)) (max 1.0 (dec layer-inputs))))
                     tskip (double (/ (- width (* 2 border)) (max 1.0 (dec layer-outputs))))]
-                (dotimes [y layer-outputs]
+                (dorun (for [y (sort-by #(hash (* 0.23 %)) (range layer-outputs))] ;; random order of drawing
                   (let [link-count (.getLinkCount layer y)
+                        y (int y)
                         tx (int (+ toffset (* tskip y)))]
                     (dotimes [ii link-count] 
 	                    (let [x (.getLinkSource layer y ii)
                             sx (int (+ soffset (* sskip x)))
                             ii (int ii)]
-	                      (.setColor g ^Color (weight-colour (double (.getLinkWeight layer y ii))))
-	                      (.drawLine g sx sy tx ty)))))))
+	                      (when (< x layer-inputs)
+                          (.setColor g ^Color (weight-colour (double (.getLinkWeight layer y ii))))
+	                        (.drawLine g sx sy tx ty)))))))))
             (dotimes [i (inc layers)]
               (let [data ^AVector (.getData nn i) 
-                    len (.length data) 
+                    len (sizes i) 
                     ty (int (+ border (* (- height (* 2 border)) (/ (- layers i) layers))))
                     toffset (double border)
                     tskip (double (/ (- width (* 2 border)) (max 1.0 (dec len))))]
@@ -218,7 +240,7 @@
   ([calcs
     & {:keys [repaint-speed time-periods y-min y-max] 
        :or {repaint-speed 250
-            time-periods 240}}]
+            time-periods 1200}}]
     (let [line-count (count calcs)
           start-millis (System/currentTimeMillis)
           times (atom '())
@@ -252,6 +274,7 @@
        :or {x-index 0
             y-index 1}}]
     (let [res (map (fn [^mikera.vectorz.AVector v] [(.get v (int x-index)) (.get v (int y-index))]) data)
+          labels labels
           xs (map first res)
           ys (map second res)
           scatter-chart (incanter.charts/scatter-plot xs ys :group-by labels)
@@ -324,6 +347,11 @@
           cps (map #(class-point (think t %)) inputs)]
       (incanter.charts/scatter-plot (map first cps) (map second cps) :group-by classes))))
 
+(defn vector-bars
+  "Draws a bar chart of the values in a vector"
+  ([v]
+    (let [n (ecount v)]
+      (incanter.charts/bar-chart (range n) (eseq v)))))
 
 ;; DEMO CODE
 

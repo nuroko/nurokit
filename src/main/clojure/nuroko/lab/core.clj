@@ -1,9 +1,11 @@
 (ns nuroko.lab.core
   (:use [clojure.core.matrix])
+  (:require [mikera.cljutils.core :refer [apply-kw]])
   (:require [mikera.cljutils.error :refer [error]])
-  (:import [nuroko.core NurokoException IParameterised ITrainable Components])  
-  (:import [nuroko.module AWeightLayer NeuralNet])
-  (:require [mikera.vectorz.matrix-api]) 
+  (:import [nuroko.core NurokoException ITask IParameterised IComponent ITrainable Components])  
+  (:import [nuroko.module AWeightLayer NeuralNet AComponent Sparsifier])
+  (:import [nuroko.module.ops ScaledLogistic])
+  (:require [mikera.vectorz.core]) 
   (:import [mikera.vectorz Op Ops AVector Vectorz]))
 
 (set! *warn-on-reflection* true)
@@ -133,6 +135,9 @@
       (.getInput task v i)
       (error "Getting indexed input only works on ExampleTask"))))
 
+(defn get-example-count [^ITask task]
+  (.getExampleCount task))
+
 ;; ===========================================
 ;; training session
 
@@ -207,6 +212,25 @@
     (class-coder :values values)))
 
 ;; ==================================================
+;; data manipulation
+
+(defn shuffle-seeded [coll seed]
+  (let [lst (java.util.ArrayList. ^java.util.Collection (vec coll))]
+    (java.util.Collections/shuffle lst (java.util.Random. (long seed)))
+    (vec lst)))
+
+(defn separate-data 
+  "Separates data into two subsets (presumably training and test).
+   result is of form [[test-data test-labels] [training-data training-labels]]"
+  ([proportion & datasets]
+    (let [n (count (first datasets))
+        t (long (* (double proportion) n))
+        svs (shuffle-seeded (apply map vector datasets) 11)
+        [seta setb] (split-at t svs)]
+    [(apply mapv vector seta)
+     (apply mapv vector setb)]))) 
+
+;; ==================================================
 ;; Task constructors
 
 (defn example-task [inputs outputs]
@@ -232,6 +256,12 @@
     
 
 ;; ===================================================
+;; Component utility functions
+
+(defn components [^IComponent comp]
+  (.getComponents comp)) 
+
+;; ===================================================
 ;; Object constructors
 
 (def DOUBLE-CLASS (Class/forName "[D"))
@@ -245,20 +275,57 @@
       (vector? x) (Vectorz/create ^java.util.List x)
       :else (Vectorz/create ^java.util.List (vec x)))))
 
+(defn weight-length-constraint [max-length]
+  (nuroko.module.layers.Constraints/weightLength (double max-length)))
+
 (defn weight-layer
   "Creates a weight layer for a neural network"
-  (^nuroko.module.AWeightLayer [& {:keys [inputs outputs max-links] 
-                                  :or {max-links Integer/MAX_VALUE}}]
-    (if-not outputs (error "Needs :outputs parameter (number of output values)"))
-    (Components/weightLayer (int inputs) (int outputs) (int max-links))))
+  (^nuroko.module.AWeightLayer [& {:keys [inputs outputs 
+                                          max-links
+                                          max-weight-length] 
+                                   :as options
+                                   :or {max-links Integer/MAX_VALUE}}]
+    (or inputs (error "Needs :outputs parameter (number of output values)"))
+    (or outputs (error "Needs :outputs parameter (number of output values)"))
+    (let [layer (Components/weightLayer (int inputs) (int outputs) (int max-links))]
+      (when (contains? options :max-weight-length)
+        (.setConstraint layer (weight-length-constraint max-weight-length)))
+      layer)))
 
+(defn neural-layer
+  "Creates a single-layer neural network"
+  (^nuroko.core.IComponent [& {:keys [inputs outputs max-links 
+                                      output-op]
+                               :as options}]
+    (if-not inputs (error "No :inputs length specified!")) 
+    (if-not outputs (error "No :outputs length specified!")) 
+    (let [options (assoc options :max-links (or max-links java.lang.Integer/MAX_VALUE))
+          ^Op op (or output-op Ops/LINEAR)
+          ^AWeightLayer wl (apply-kw weight-layer options)] 
+      (.initRandom wl)  
+      (NeuralNet. wl op))))
+
+(defn offset 
+  "Creates an offset component"
+  (^IComponent [& {:keys [length delta]}]
+    (Components/offset (int length) (double delta))))
+
+(defn sparsifier 
+  "Creates an offset component"
+  (^IComponent [& {:keys [length target-mean weight]
+                   :or {target-mean 0.1
+                        weight 0.1}}]
+    (Sparsifier. (int length) (double target-mean) (double weight))))
 
 (defn neural-network 
   "Creates a standard neural network"
-  (^nuroko.module.NeuralNet [& {:keys [inputs outputs layers max-links hidden-op output-op hidden-sizes dropout] 
+  (^nuroko.module.NeuralNet [& {:keys [inputs outputs layers hidden-sizes 
+                                       max-links max-weight-length
+                                       hidden-op output-op 
+                                       dropout hidden-dropout input-noise] 
                                   :as options
                                   :or {layers 3
-                                       output-op Ops/LOGISTIC
+                                       output-op ScaledLogistic/INSTANCE
                                        hidden-op Ops/TANH}}]
  ;;   (println (str "NN: " options)) 
     (if-not inputs (error "No :inputs length specified!")) 
@@ -272,9 +339,11 @@
       (dotimes [i layers]
         (let [] 
           (aset layer-array (int i) 
-                (weight-layer :inputs (sizes i) 
-                              :outputs (sizes (inc i)) 
-                              :max-links (or max-links (sizes i))))))
+                (apply-kw weight-layer 
+                          :inputs (sizes i) 
+                          :outputs (sizes (inc i)) 
+                          :max-links (or max-links (sizes i))
+                          options))))
       (let [nn (NeuralNet. layer-array hidden-op output-op)]
         (.initRandom nn)
         (if dropout
@@ -292,34 +361,49 @@
 (def connect stack) 
 
 ;; ===========================================
+;; utility functions and modifiers
+
+(defn learn-factor 
+  "Gets the learning factor for a component (default is 1.0)"
+  ([^IComponent c]
+    (.getLearnFactor c))) 
+
+(defn adjust-learn-factor! 
+  "Adjusts the learning factor of a compoenent by a scale factor."
+  ([^AComponent c ^double scale]
+    (.setLearnFactor c (* scale (.getLearnFactor c))))) 
+
+;; ===========================================
 ;; Weight update algorithms
 
+(def lu (atom nil))
 
 (defn backprop-updater
-  "Creates a training algorithm that improves a neural network for the given task"
+  "Creates a stateful backprop training updater that improves a neural network for the given task"
   ([^nuroko.core.IParameterised network
     & {:keys [momentum-factor learn-rate] 
-       :or {momentum-factor 0.9
+       :or {momentum-factor 0.75
             learn-rate 1.0}}]
     (let [parameter-length (.getParameterLength ^IParameterised network)
           ^AVector last-update (Vectorz/newVector parameter-length)
           momentum-factor (double momentum-factor)
-          learn-factor (double (* 0.01 learn-rate))]
+          learn-factor (double (* 0.001 learn-rate))]
       (fn [^nuroko.core.IParameterised network]
         (let [^AVector gradient (get-gradient network)
               ^AVector parameters (get-parameters network)] 
 	        (.multiply last-update momentum-factor)
 	        (.addMultiple last-update gradient learn-factor)
 	        (.add parameters last-update)
-	        
-	        (.fill gradient 0.0))))))
+          (reset! lu last-update)
+         ;(.addMultiple parameters gradient learn-factor)
+         )))))
 
 (defn rmsprop-updater
-  "Creates a trainer session that improves a neural network for the given task"
+  "Creates a stateful rmsprop training updater that improves a neural network for the given task"
   ([^nuroko.core.IParameterised network
     & {:keys [momentum-factor learn-rate max-rms-factor rms-decay] 
        :or {momentum-factor 0.9
-            learn-rate 0.0001
+            learn-rate 1.0
             max-rms-factor 20.0
             rms-decay 0.95}}]
     (let [parameter-length (.getParameterLength ^IParameterised network)
@@ -341,16 +425,16 @@
 	        (.clampMax temp (double max-rms-factor)) 
 	 
 	        (.multiply last-update momentum-factor)
-	        (.addProduct last-update gradient temp (* learn-rate 1.0))
-	        (.add parameters last-update)
-	        
-	        (.fill gradient 0.0))))))
+	        (.addProduct last-update gradient temp (* learn-rate 0.0001))
+	        (.add parameters last-update))))))
 
 ;; ===========================================
 ;; Trainer functions
 
 (defn default-loss-function [network]
-  nuroko.module.loss.SquaredErrorLoss/INSTANCE) 
+  (cond 
+    (instance? IComponent network) (.getDefaultLossFunction ^IComponent network)
+    :else nuroko.module.loss.SquaredErrorLoss/INSTANCE)) 
 
 (defn supervised-trainer 
     [^nuroko.core.ITrainable network task
@@ -364,18 +448,19 @@
           input (Vectorz/newVector input-length)
           target (Vectorz/newVector output-length)
           learn-rate-factor (double learn-rate)] 
-      (fn [^nuroko.core.ITrainable network & {:keys [learn-rate]}]
+      (fn [^nuroko.core.IComponent network & {:keys [learn-rate]}]
+        (.fill ^AVector (get-gradient network) 0.0)
         (dotimes [i (long batch-size)]
           (get-input task input)
           (get-target task input target)
           (.train network input target 
             ^nuroko.module.loss.LossFunction loss-function 
             (if learn-rate (double (* learn-rate learn-rate-factor)) learn-rate-factor)))
-        (updater network))))
+        (updater network)
+        (.applyConstraints network))))
 
 ;; ===========================================
 ;; Evaluation functions
-
 
 (defn evaluate 
   "Evaluates a network gainst a given task"
@@ -405,7 +490,8 @@
     & {:keys [iterations probabilistic] 
        :or {iterations 100
             probabilistic false}}]
-    (let [network (.clone network)
+    (let [iterations (long (min iterations (get-example-count task)))
+          network (.clone network)
           task (.clone task)
           result (atom 0.0)
           input-length (int (task-input-length task))

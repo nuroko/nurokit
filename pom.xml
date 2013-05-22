@@ -1,14 +1,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>nurokit</artifactId>
-	<version>0.0.2</version>
+	<version>0.0.3</version>
 	
 	<description>Open source Nuroko machine learning toolkit for Clojure</description>
 
 	<parent>
 		<groupId>com.nuroko</groupId>
 		<artifactId>nuroko-pom</artifactId>
-		<version>0.0.4</version>
+		<version>0.0.6</version>
 	</parent>
 
 	<url>https://github.com/nuroko/${project.artifactId}.git</url>
@@ -17,7 +17,7 @@
 		<connection>scm:git:git@github.com:nuroko/${project.artifactId}.git</connection>
 		<url>scm:git:git@github.com:nuroko/${project.artifactId}.git</url>
 		<developerConnection>scm:git:git@github.com:nuroko/${project.artifactId}.git</developerConnection>
-		<tag>nurokit-0.0.2</tag>
+		<tag>nurokit-0.0.3</tag>
 	</scm>
 
 	<licenses>
@@ -33,6 +33,7 @@
 			<url>http://clojars.org/repo</url>
 		</repository>
 	</repositories>
+	
 	<dependencies>
 		<dependency>
 			<groupId>org.clojure</groupId>
@@ -42,12 +43,12 @@
 		<dependency>
 			<groupId>com.nuroko</groupId>
 			<artifactId>nurokore</artifactId>
-			<version>0.0.4</version>
+			<version>0.0.6</version>
 		</dependency>
 		<dependency>
 			<groupId>net.mikera</groupId>
 			<artifactId>vectorz-clj</artifactId>
-			<version>0.8.0</version>
+			<version>0.9.0</version>
 		</dependency>
 		<dependency>
 			<groupId>net.mikera</groupId>
@@ -73,12 +74,12 @@
 		<dependency>
 			<groupId>net.mikera</groupId>
 			<artifactId>clojure-utils</artifactId>
-			<version>0.2.1</version>
+			<version>0.2.2</version>
 		</dependency>
 		<dependency>
 			<groupId>net.mikera</groupId>
 			<artifactId>vectorz</artifactId>
-			<version>0.11.0</version>
+			<version>0.13.1</version>
 		</dependency>
 		<dependency>
 			<groupId>net.mikera</groupId>
@@ -88,7 +89,13 @@
 		<dependency>
 			<groupId>net.mikera</groupId>
 			<artifactId>core.matrix</artifactId>
-			<version>0.5.0</version>
+			<version>0.7.0</version>
+		</dependency>
+		<dependency>
+			<groupId>net.mikera</groupId>
+			<artifactId>core.matrix.stats</artifactId>
+			<version>0.0.1</version>
 		</dependency>
 	</dependencies>
+	<name>Nurokit</name>
 </project>

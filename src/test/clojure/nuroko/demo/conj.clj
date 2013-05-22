@@ -5,12 +5,13 @@
   (:require [task.core :as task])
   (:require [nuroko.data mnist])
   (:import [mikera.vectorz Op Ops])
+  (:import [mikera.vectorz.ops ScaledLogistic Logistic Tanh])
   (:import [nuroko.coders CharCoder])
   (:import [mikera.vectorz AVector Vectorz]))
 
 (ns nuroko.demo.conj)
 
-;; som eutility functions
+;; some utility functions
 (defn feature-img [vector]
   ((image-generator :width 28 :height 28 :colour-function weight-colour-mono) vector))  
 
@@ -42,6 +43,8 @@
 	(def net 
 	  (neural-network :inputs 26 
 	                  :outputs 4
+                    :hidden-op Ops/LOGISTIC 
+                    :output-op Ops/LOGISTIC
 	                  :hidden-sizes [6]))
   
   (show (network-graph net :line-width 2) 
@@ -61,8 +64,7 @@
     (let [net (.clone net)
           chars (keys scores)]
       (count (for [c chars 
-         :when (= (scrabble-score net c)
-                  (scores c))] c))))  
+                   :when (= (scrabble-score net c) (scores c))] c))))  
     
   (show (time-chart 
           [#(evaluate-scores net)] 
@@ -70,10 +72,10 @@
         :title "Correct letters")
    
   ;; training algorithm
-  (def trainer (supervised-trainer net task))
+  (def trainer (supervised-trainer net task :batch-size 100))
   
   (task/run 
-    {:sleep 100 :repeat 100} ;; sleep used to slow it down, otherwise trains instantly.....
+    {:sleep 1 :repeat 1000} ;; sleep used to slow it down, otherwise trains instantly.....
     (trainer net))
    
   (scrabble-score net \q)
@@ -108,16 +110,25 @@
   (def compress-task (identity-task data)) 
   
   (def compressor 
-	  (neural-network :inputs 784 
-	                  :outputs INNER_SIZE
-                    :layers 1
-                    :output-op Ops/LOGISTIC
-                    :dropout 0.5))
+	  (stack
+      ;;(offset :length 784 :delta -0.5)
+      (neural-network :inputs 784 
+	                    :outputs INNER_SIZE
+                      :layers 1
+                     ;; :max-weight-length 4.0      
+                      :output-op Ops/LOGISTIC
+                     ;; :dropout 0.5
+                      )
+      (sparsifier :length INNER_SIZE)))
   
   (def decompressor 
-	  (neural-network :inputs INNER_SIZE  
-	                  :outputs 784
-                    :layers 1))
+	  (stack 
+      (offset :length INNER_SIZE :delta -0.5)
+      (neural-network :inputs INNER_SIZE  
+	                    :outputs 784
+                     ;; :max-weight-length 4.0
+                      :output-op Ops/LOGISTIC
+                      :layers 1)))
   
   (def reconstructor 
     (connect compressor decompressor)) 
@@ -131,14 +142,11 @@
         :title "100 digits reconstructed")))
   (show-reconstructions) 
 
-
   (def trainer (supervised-trainer reconstructor compress-task))
   
 	(task/run 
-    {:sleep 1 :repeat 100}
-    (do 
-      (trainer reconstructor)
-      (show-reconstructions)))
+    {:sleep 1 :repeat true}
+    (do (trainer reconstructor) (show-reconstructions)))
     
   (task/stop-all)
  
@@ -158,17 +166,19 @@
  	    :output-coder num-coder))
   
   (def recogniser
-    (neural-network :inputs INNER_SIZE  
+    (stack
+      (offset :length INNER_SIZE :delta -0.5)
+      (neural-network :inputs INNER_SIZE  
+                    :output-op Ops/LOGISTIC
 	                  :outputs 10
-                    :layers 3))
+                    :layers 2)))
   
   (def recognition-network 
     (connect compressor recogniser))
   
   (def trainer2 (supervised-trainer recognition-network 
                                     recognition-task 
-                                    :loss-function nuroko.module.loss.CrossEntropyLoss/INSTANCE
-                                    :learn-rate 0.1
+                                    ;;:loss-function nuroko.module.loss.CrossEntropyLoss/INSTANCE
                                    ))
 
   ;; test data and task - 10,000 cases
@@ -189,8 +199,8 @@
         :title "Error rate")
   
   (task/run 
-    {:sleep 1 :repeat 1000}
-    (trainer2 recognition-network :learn-rate 0.3)) 
+    {:sleep 1 :repeat true}
+    (trainer2 recognition-network :learn-rate 0.1)) 
      ;; can tune learn-rate, lower => fine tuning => able to hit better overall accuracy
     
   (task/stop-all)
