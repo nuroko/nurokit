@@ -112,6 +112,7 @@
   (def compressor 
 	  (stack
       ;;(offset :length 784 :delta -0.5)
+      (dropout :length INNER_SIZE :dropout 0.1)
       (neural-network :inputs 784 
 	                    :outputs INNER_SIZE
                       :layers 1
@@ -119,12 +120,12 @@
                       :output-op Ops/LOGISTIC
                       )
       (sparsifier :length INNER_SIZE)
-      (dropout :length INNER_SIZE :dropout 0.5)
       ))
   
   (def decompressor 
 	  (stack 
       (offset :length INNER_SIZE :delta -0.5)
+      (dropout :length INNER_SIZE :dropout 0.5)
       (neural-network :inputs INNER_SIZE  
 	                    :outputs 784
                       :max-weight-length 4.0
@@ -154,6 +155,8 @@
   ;; look at feature maps for 150 hidden units
   (show (map feature-img (feature-maps compressor :scale 2)) :title "Feature maps") 
 
+  ;; spatiotemporal output (each output vector is one line of image)
+  (let [compressor (clone compressor)] (show (spatio (map (partial think compressor) (take 200 data)))))
   
   ;; now for the digit recognition
   (def num-coder (class-coder 
