@@ -115,18 +115,19 @@
       (neural-network :inputs 784 
 	                    :outputs INNER_SIZE
                       :layers 1
-                     ;; :max-weight-length 4.0      
+                      :max-weight-length 4.0      
                       :output-op Ops/LOGISTIC
-                     ;; :dropout 0.5
                       )
-      (sparsifier :length INNER_SIZE)))
+      (sparsifier :length INNER_SIZE)
+      (dropout :length INNER_SIZE :dropout 0.5)
+      ))
   
   (def decompressor 
 	  (stack 
       (offset :length INNER_SIZE :delta -0.5)
       (neural-network :inputs INNER_SIZE  
 	                    :outputs 784
-                     ;; :max-weight-length 4.0
+                      :max-weight-length 4.0
                       :output-op Ops/LOGISTIC
                       :layers 1)))
   
@@ -142,7 +143,7 @@
         :title "100 digits reconstructed")))
   (show-reconstructions) 
 
-  (def trainer (supervised-trainer reconstructor compress-task))
+  (def trainer (supervised-trainer reconstructor compress-task :learn-rate 1.0))
   
 	(task/run 
     {:sleep 1 :repeat true}
@@ -200,7 +201,7 @@
   
   (task/run 
     {:sleep 1 :repeat true}
-    (trainer2 recognition-network :learn-rate 0.1)) 
+    (trainer2 recognition-network :learn-rate 1.0)) 
      ;; can tune learn-rate, lower => fine tuning => able to hit better overall accuracy
     
   (task/stop-all)

@@ -314,15 +314,23 @@
   "Creates an offset component"
   (^IComponent [& {:keys [length target-mean weight]
                    :or {target-mean 0.1
-                        weight 0.1}}]
+                        weight 1.0}}]
     (Sparsifier. (int length) (double target-mean) (double weight))))
+
+(defn dropout 
+  "Creates a dropout layer"
+  (^nuroko.module.NeuralNet [& {:keys [length 
+                                       dropout] 
+                                :as options
+                                :or {dropout 0.5}}]
+    (Components/dropout (int length) (double dropout))))
 
 (defn neural-network 
   "Creates a standard neural network"
   (^nuroko.module.NeuralNet [& {:keys [inputs outputs layers hidden-sizes 
                                        max-links max-weight-length
                                        hidden-op output-op 
-                                       dropout hidden-dropout input-noise] 
+                                       input-noise] 
                                   :as options
                                   :or {layers 3
                                        output-op ScaledLogistic/INSTANCE
@@ -346,9 +354,7 @@
                           options))))
       (let [nn (NeuralNet. layer-array hidden-op output-op)]
         (.initRandom nn)
-        (if dropout
-          (stack nn (Components/dropout (int outputs) (double dropout)))
-          nn)))))
+        nn))))
 
 ;; ===========================================
 ;; Compositions
