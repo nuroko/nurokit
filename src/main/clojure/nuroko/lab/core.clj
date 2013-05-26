@@ -311,7 +311,7 @@
     (Components/offset (int length) (double delta))))
 
 (defn sparsifier 
-  "Creates an offset component"
+  "Creates a sparsifier component"
   (^IComponent [& {:keys [length target-mean weight]
                    :or {target-mean 0.1
                         weight 1.0}}]
@@ -388,7 +388,7 @@
   "Creates a stateful backprop training updater that improves a neural network for the given task"
   ([^nuroko.core.IParameterised network
     & {:keys [momentum-factor learn-rate] 
-       :or {momentum-factor 0.75
+       :or {momentum-factor 0.95
             learn-rate 1.0}}]
     (let [parameter-length (.getParameterLength ^IParameterised network)
           ^AVector last-update (Vectorz/newVector parameter-length)
@@ -444,9 +444,10 @@
 
 (defn supervised-trainer 
     [^nuroko.core.ITrainable network task
-     & {:keys [batch-size updater learn-rate loss-function] 
+     & {:keys [batch-size updater learn-rate loss-function synth] 
         :or {batch-size 100
              learn-rate 1.0
+             synth false
              loss-function (default-loss-function network)}}]
     (let [input-length (input-length network)
           output-length (output-length network)
@@ -455,15 +456,16 @@
           target (Vectorz/newVector output-length)
           learn-rate-factor (double learn-rate)] 
       (fn [^nuroko.core.IComponent network & {:keys [learn-rate]}]
-        (.fill ^AVector (get-gradient network) 0.0)
-        (dotimes [i (long batch-size)]
-          (get-input task input)
-          (get-target task input target)
-          (.train network input target 
-            ^nuroko.module.loss.LossFunction loss-function 
-            (if learn-rate (double (* learn-rate learn-rate-factor)) learn-rate-factor)))
-        (updater network)
-        (.applyConstraints network))))
+        (let [lr (if learn-rate (double (* learn-rate learn-rate-factor)) learn-rate-factor)]
+          (.fill ^AVector (get-gradient network) 0.0)
+	        (dotimes [i (long batch-size)]
+	          (get-input task input)
+	          (get-target task input target)
+	          (if synth
+              (.trainSynth network input)
+              (.train network input target ^nuroko.module.loss.LossFunction loss-function lr)))
+	        (updater network)
+	        (.applyConstraints network)))))
 
 ;; ===========================================
 ;; Evaluation functions
