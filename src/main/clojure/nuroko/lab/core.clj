@@ -332,7 +332,7 @@
                                        hidden-op output-op 
                                        input-noise] 
                                   :as options
-                                  :or {layers 3
+                                  :or {layers 1
                                        output-op ScaledLogistic/INSTANCE
                                        hidden-op Ops/TANH}}]
  ;;   (println (str "NN: " options)) 
@@ -456,14 +456,15 @@
           target (Vectorz/newVector output-length)
           learn-rate-factor (double learn-rate)] 
       (fn [^nuroko.core.IComponent network & {:keys [learn-rate]}]
-        (let [lr (if learn-rate (double (* learn-rate learn-rate-factor)) learn-rate-factor)]
+        (let [lr (double (if learn-rate (* learn-rate learn-rate-factor) learn-rate-factor))]
           (.fill ^AVector (get-gradient network) 0.0)
 	        (dotimes [i (long batch-size)]
-	          (get-input task input)
-	          (get-target task input target)
+	          (get-input task input)          
 	          (if synth
-              (.trainSynth network input)
-              (.train network input target ^nuroko.module.loss.LossFunction loss-function lr)))
+              (.trainSynth ^nuroko.core.ISynthesiser network input lr)
+              (do 
+                (get-target task input target)
+                (.train network input target ^nuroko.module.loss.LossFunction loss-function lr))))
 	        (updater network)
 	        (.applyConstraints network)))))
 
