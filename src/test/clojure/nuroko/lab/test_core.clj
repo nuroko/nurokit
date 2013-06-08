@@ -12,3 +12,7 @@
     (adjust-learn-factor! n 2.0)
     (is (== 2.0 (learn-factor n)))))
 
+(deftest test-think
+  (let [f inc]
+    (is (== 2 (think f 1))))) 
+
