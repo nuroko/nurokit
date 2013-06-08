@@ -41,18 +41,24 @@
       (.getOutputLength wl)))
 
 (defprotocol PThinker
-  (think-impl [thinker input output]))
+  (think-impl 
+    [thinker input]
+    [thinker input output]))
 
 (extend-protocol PThinker
   nuroko.core.IThinker
-    (think-impl [thinker ^AVector input ^AVector output]
-      (.think thinker input output)))
+    (think-impl 
+      ([thinker ^AVector input]
+        (let [output (Vectorz/newVector (output-length thinker))]
+          (.think thinker input output)
+          output))
+      ([thinker ^AVector input ^AVector output]
+        (.think thinker input output)
+        output)))
 
 (defn think 
   ([thinker input]
-    (let [output (Vectorz/newVector (output-length thinker))]
-      (think thinker input output)
-      output))
+    (think-impl thinker input))
   ([thinker input output]
     (think-impl thinker input output)
     output)) 
