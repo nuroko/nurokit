@@ -64,6 +64,14 @@
       ([thinker input output]
         (error "Can't think to specific output for general IFunction"))))
 
+(extend-protocol PThinker
+  clojure.lang.IFn
+    (think-impl 
+      ([thinker input]
+        (thinker input))
+      ([thinker input output]
+        (error "Can't think to specific output for general IFn"))))
+
 (defn think 
   ([thinker input]
     (think-impl thinker input))
