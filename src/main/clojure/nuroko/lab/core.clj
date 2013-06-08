@@ -56,6 +56,14 @@
         (.think thinker input output)
         output)))
 
+(extend-protocol PThinker
+  nuroko.core.IFunction
+    (think-impl 
+      ([thinker input]
+        (.think thinker input))
+      ([thinker input output]
+        (error "Can't think to specific output for general IFunction"))))
+
 (defn think 
   ([thinker input]
     (think-impl thinker input))
