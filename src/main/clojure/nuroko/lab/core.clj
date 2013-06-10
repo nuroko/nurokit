@@ -208,19 +208,19 @@
 ;; ===================================================
 ;; Coder constructors
 
-(defn ^nuroko.coders.FixedLongCoder int-coder
+(defn int-coder
   ([& {:keys [bits] 
        :or {}
        :as options}]
     (if bits 
-      (nuroko.coders.FixedLongCoder. bits)
+      (nuroko.coders.IntegerCoder. bits)
       (error "Invaid input: " options))))
 
-(defn ^nuroko.coders.IdentityCoder vector-coder
+(defn vector-coder
   ([size]
     (nuroko.coders.IdentityCoder. size)))
 
-(defn ^nuroko.coders.ChoiceCoder class-coder
+(defn class-coder
   ([& {:keys [values] 
        :or {}
        :as options}]
