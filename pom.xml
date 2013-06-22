@@ -48,7 +48,7 @@
 		<dependency>
 			<groupId>net.mikera</groupId>
 			<artifactId>vectorz-clj</artifactId>
-			<version>0.9.0</version>
+			<version>0.10.0</version>
 		</dependency>
 		<dependency>
 			<groupId>net.mikera</groupId>
@@ -69,7 +69,7 @@
 		<dependency>
 			<groupId>incanter</groupId>
 			<artifactId>incanter</artifactId>
-			<version>1.5.0</version>
+			<version>1.5.1</version>
 		</dependency>
 		<dependency>
 			<groupId>net.mikera</groupId>
@@ -79,7 +79,7 @@
 		<dependency>
 			<groupId>net.mikera</groupId>
 			<artifactId>vectorz</artifactId>
-			<version>0.13.2</version>
+			<version>0.15.0</version>
 		</dependency>
 		<dependency>
 			<groupId>net.mikera</groupId>
@@ -89,12 +89,12 @@
 		<dependency>
 			<groupId>net.mikera</groupId>
 			<artifactId>core.matrix</artifactId>
-			<version>0.7.2</version>
+			<version>0.8.0</version>
 		</dependency>
 		<dependency>
 			<groupId>net.mikera</groupId>
 			<artifactId>core.matrix.stats</artifactId>
-			<version>0.0.1</version>
+			<version>0.1.0</version>
 		</dependency>
 	</dependencies>
 	<name>Nurokit</name>
