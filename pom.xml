@@ -78,11 +78,6 @@
 		</dependency>
 		<dependency>
 			<groupId>net.mikera</groupId>
-			<artifactId>mikera-clojure</artifactId>
-			<version>1.0.4</version>
-		</dependency>
-		<dependency>
-			<groupId>net.mikera</groupId>
 			<artifactId>core.matrix</artifactId>
 			<version>0.9.0</version>
 		</dependency>
@@ -90,6 +85,11 @@
 			<groupId>net.mikera</groupId>
 			<artifactId>core.matrix.stats</artifactId>
 			<version>0.2.0</version>
+		</dependency>
+		<dependency>
+			<groupId>net.mikera</groupId>
+			<artifactId>mikera-clojure</artifactId>
+			<version>1.0.4</version>
 		</dependency>
 	</dependencies>
 	<name>Nurokit</name>
