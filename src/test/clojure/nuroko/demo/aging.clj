@@ -4,6 +4,7 @@
   (:use [clojure.repl])
   (:use [clojure.core.matrix])
   (:require [task.core :as task])
+  (:require [mikera.cljutils.mouse :as ms])
   (:import [mikera.vectorz Op Ops])
   (:import [mikera.vectorz.ops ScaledLogistic Logistic Tanh])
   (:import [nuroko.coders CharCoder])
@@ -55,6 +56,14 @@
   (dotimes [i 100]
      (append-data (rand-row))
      (show (data-chart @DATA)))
+  
+  (task/run 
+    {:sleep 40 :repeat 1000} ;; sleep used to slow 
+    (do 
+      (append-data (row (ms/mouse-x) (ms/mouse-y) (* 1000 (+ 1 (Math/sin (* (System/currentTimeMillis) 0.001))))))
+      (show (data-chart @DATA) :title "Mouse")))
+  
+  (task/stop-all)
 
 
 )
