@@ -12,7 +12,7 @@
   (:import [mikera.vectorz Op Ops])
   (:import [mikera.vectorz.ops ScaledLogistic Logistic Tanh])
   (:import [nuroko.coders CharCoder])
-  (:import [mikera.vectorz AVector Vectorz]))
+  (:import [mikera.vectorz Vector AVector Vectorz]))
 
 (set-current-implementation :vectorz)
 
@@ -81,7 +81,6 @@
                                         (prob (pint (nth r 3))))))))))) 
 
 (load-data) 
-(reset)
 
 (defn show-row [row]
   (append-data row)
@@ -93,6 +92,17 @@
 (def INPUT-SIZE (* 3 WINDOW))
 (def OUTPUT-SIZE 1)
 (def SYNTH-SIZE 32)
+
+(defn feature-vector [data pos]
+  (let [pos (int pos)
+        n (int INPUT-SIZE)
+        w (int WINDOW)
+        v (Vector/createLength n)]
+    (dotimes [i w]
+      (.set v (+ (* i 3) 0) (.get ^AVector (data (+ i (- pos w))) 0))
+      (.set v (+ (* i 3) 1) (.get ^AVector (data (+ i (- pos w))) 1))
+      (.set v (+ (* i 3) 2) (.get ^AVector (data (+ i (- pos w))) 2)))
+    v))
 
 (def up
     (neural-network :inputs INPUT-SIZE  
