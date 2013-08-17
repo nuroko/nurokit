@@ -19,6 +19,7 @@
 (def ROW-LENGTH 5)
 (def DISPLAY-LENGTH 100)
 (def PORT 9000)
+(def WINDOW 64) ;; time period in window = 2sec 
 
 ;; construct a data row ( 5 elements enough?)
 (defn row ([& ds] 
@@ -33,9 +34,7 @@
 (def DATA (atom []))
 
 (defn reset []
-  (reset! TDATA [])
-  (dotimes [i 1000]
-    (swap! TDATA (fn [old] (conj old (row (Math/sin (* i 0.1)) (Math/sin  (* i 0.06) ) (Math/sin (* i 0.05))))))))
+  (reset! TDATA []))
 
 (defn data-chart 
   ([data] (data-chart data (- (count data) DISPLAY-LENGTH)))
@@ -62,6 +61,11 @@
 
 (defn ^long pint [^String s]
   (long (Integer/parseInt s)))
+
+(defn test-data []
+  (reset! TDATA [])
+  (dotimes [i 1000]
+    (swap! TDATA (fn [old] (conj old (row (Math/sin (* i 0.1)) (Math/sin  (* i 0.06) ) (Math/sin (* i 0.05))))))))
 
 (defn load-data []
   (reset! TDATA [])
