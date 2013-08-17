@@ -5,7 +5,9 @@
   (:use [clojure.core.matrix])
   (:require [task.core :as task])
   (:require [server.socket :as ss])
+  (:require [clojure.data.csv :as csv]) 
   (:require [mikera.cljutils.mouse :as ms])
+  (:require [clojure.java.io :as io])
   (:import [java.io InputStream OutputStream DataInputStream DataOutputStream])
   (:import [mikera.vectorz Op Ops])
   (:import [mikera.vectorz.ops ScaledLogistic Logistic Tanh])
@@ -47,6 +49,32 @@
 (defn append-data [row]
   (swap! DATA (fn [old] (conj old row))))
 
+(defn norm 
+  "Normalise byte to -1,1 range"
+  ([x]
+    (let [b (byte x)]
+      (- (* (/ 1.0 128.0) b) 1.0))))
+
+(defn prob 
+  "Normalise probability to -1,1 range"
+  ([x]
+    (double (max 0.0 (min 1.0 (double x))))))
+
+(defn ^long pint [^String s]
+  (long (Integer/parseInt s)))
+
+(defn load-data []
+  (reset! TDATA [])
+  (with-open [in-file (io/reader (io/resource "temp/medtronic-carelink-export.csv"))]
+    (let [data (csv/read-csv in-file)]
+      (doseq [r data]
+        (swap! TDATA
+               (fn [old] (conj old (row (norm (pint (nth r 0))) 
+                                        (norm (pint (nth r 1))) 
+                                        (norm (pint (nth r 2))) 
+                                        (prob (pint (nth r 3))))))))))) 
+
+;; (load-data) 
 (reset)
 
 (defn show-row [row]
@@ -54,7 +82,7 @@
   (show (data-chart @DATA) :title "Mouse"))
 
 (defn read-byte [^DataInputStream dis]
-  (- (* (/ 1.0 256) (.read dis)) 0.5))
+  (norm (byte (.read dis))))
 
 (defn read-row [^DataInputStream dis]
   (row (read-byte dis) (read-byte dis) (read-byte dis) 0 0))
