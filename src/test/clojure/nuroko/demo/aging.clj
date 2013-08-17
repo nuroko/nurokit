@@ -4,7 +4,9 @@
   (:use [clojure.repl])
   (:use [clojure.core.matrix])
   (:require [task.core :as task])
+  (:require [server.socket :as ss])
   (:require [mikera.cljutils.mouse :as ms])
+  (:import [java.io InputStream OutputStream DataInputStream DataOutputStream])
   (:import [mikera.vectorz Op Ops])
   (:import [mikera.vectorz.ops ScaledLogistic Logistic Tanh])
   (:import [nuroko.coders CharCoder])
@@ -14,6 +16,7 @@
 
 (def ROW-LENGTH 5)
 (def DISPLAY-LENGTH 100)
+(def PORT 9000)
 
 ;; construct a data row ( 5 elements enough?)
 (defn row ([& ds] 
@@ -45,6 +48,35 @@
   (swap! DATA (fn [old] (conj old row))))
 
 (reset)
+
+(defn show-row [row]
+  (append-data row)
+  (show (data-chart @DATA) :title "Mouse"))
+
+(defn read-byte [^DataInputStream dis]
+  (- (* (/ 1.0 256) (.read dis)) 0.5))
+
+(defn read-row [^DataInputStream dis]
+  (row (read-byte dis) (read-byte dis) (read-byte dis) 0 0))
+
+(defn server-fn [^InputStream input-stream ^OutputStream output-stream]
+  (let [dis (DataInputStream. input-stream)
+        dos (DataOutputStream. output-stream)]
+    (try
+      (loop []
+        (let [row (read-row dis)]
+          (.writeByte dos (unchecked-byte 13))
+          (show-row row))
+        (recur))
+      (catch Throwable t (println (str t))))))
+
+(defonce server (atom nil))
+(defn start []
+  (swap! server
+         (fn [old] 
+           (when old (ss/close-server old))
+           (ss/create-server PORT server-fn))))
+(start) 
 
 ;; =================== DEMO CODE FOLLOWS =====================
 
