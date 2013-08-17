@@ -43,7 +43,9 @@
     (let [r (range (max 0 start) (min (count data) end))]
       (xy-chart-multiline r [(map #(.get ^AVector (data %) 0) r) 
                              (map #(.get ^AVector (data %) 1) r)
-                             (map #(.get ^AVector (data %) 2) r)]))))
+                             (map #(.get ^AVector (data %) 2) r)
+                             (map #(.get ^AVector (data %) 3) r)
+                             (map #(.get ^AVector (data %) 4) r)]))))
 
 (defn append-data [row]
   (swap! DATA (fn [old] (conj old row))))
@@ -51,7 +53,7 @@
 (defn norm 
   "Normalise byte to -1,1 range"
   ([x]
-    (let [b (byte x)]
+    (let [b (long x)]
       (- (* (/ 1.0 128.0) b) 1.0))))
 
 (defn prob 
@@ -69,7 +71,7 @@
 
 (defn load-data []
   (reset! TDATA [])
-  (with-open [in-file (io/reader (io/resource "temp/medtronic-carelink-export.csv"))]
+  (with-open [in-file (io/reader (io/resource "temp/calibration.csv"))]
     (let [data (csv/read-csv in-file)]
       (doseq [r data]
         (swap! TDATA
@@ -78,15 +80,58 @@
                                         (norm (pint (nth r 2))) 
                                         (prob (pint (nth r 3))))))))))) 
 
-;; (load-data) 
+(load-data) 
 (reset)
 
 (defn show-row [row]
   (append-data row)
   (show (data-chart @DATA) :title "Mouse"))
 
+
+;; =================== NEURAL NET ============================
+
+(def INPUT-SIZE (* 3 WINDOW))
+(def OUTPUT-SIZE 1)
+(def SYNTH-SIZE 32)
+
+(def up
+    (neural-network :inputs INPUT-SIZE  
+                    :max-links INPUT-SIZE
+                    :output-op Ops/TANH
+                    :outputs SYNTH-SIZE
+                    :layers 1))
+
+(show (network-graph up :line-width 2) 
+        :title "Neural Net : synth up")
+ 
+(def down
+    (neural-network :inputs SYNTH-SIZE  
+                    :max-links INPUT-SIZE
+                    :output-op Ops/LINEAR
+                    :outputs INPUT-SIZE
+                    :layers 1))
+
+(def synth (stack up down))
+
+(def rec
+    (neural-network :inputs SYNTH-SIZE  
+                    :max-links SYNTH-SIZE
+                    :hidden-op Ops/TANH
+                    :output-op Ops/LOGISTIC
+                    :outputs OUTPUT-SIZE
+                    :layers 1))
+
+(show (network-graph rec :line-width 2) 
+        :title "Neural Net : rec")
+
+(def net (stack up rec)) 
+
+
+;; =================== SERVER   ============================
+
+
 (defn read-byte [^DataInputStream dis]
-  (norm (byte (.read dis))))
+  (norm (unchecked-int (.read dis))))
 
 (defn read-row [^DataInputStream dis]
   (row (read-byte dis) (read-byte dis) (read-byte dis) 0 0))
