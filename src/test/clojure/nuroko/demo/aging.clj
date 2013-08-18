@@ -12,7 +12,11 @@
   (:import [mikera.vectorz Op Ops])
   (:import [mikera.vectorz.ops ScaledLogistic Logistic Tanh])
   (:import [nuroko.coders CharCoder])
+  (:import [nuroko.core IComponent])
   (:import [mikera.vectorz Vector AVector Vectorz]))
+
+(set! *warn-on-reflection* true)
+(set! *unchecked-math* true)
 
 (set-current-implementation :vectorz)
 
@@ -69,16 +73,20 @@
   (dotimes [i 1000]
     (swap! TDATA (fn [old] (conj old (row (Math/sin (* i 0.1)) (Math/sin  (* i 0.06) ) (Math/sin (* i 0.05))))))))
 
-(defn load-data []
-  (reset! TDATA [])
-  (with-open [in-file (io/reader (io/resource "temp/calibration.csv"))]
-    (let [data (csv/read-csv in-file)]
-      (doseq [r data]
-        (swap! TDATA
-               (fn [old] (conj old (row (norm (pint (nth r 0))) 
+(defn load-data 
+  ([] 
+    (reset! TDATA [])
+    (load-data "temp/calibration.csv")
+    (load-data "temp/calib2.csv"))
+  ([fname]
+    (with-open [in-file (io/reader (io/resource fname))]
+      (let [data (csv/read-csv in-file)]
+        (doseq [r data]
+          (swap! TDATA
+                 (fn [old] (conj old (row (norm (pint (nth r 0))) 
                                         (norm (pint (nth r 1))) 
                                         (norm (pint (nth r 2))) 
-                                        (prob (pint (nth r 3))))))))))) 
+                                        (prob (pint (nth r 3)))))))))))) 
 
 (load-data) 
 
@@ -102,6 +110,12 @@
       (.set v (+ (* i 3) 0) (.get ^AVector (data (+ i (- pos w))) 0))
       (.set v (+ (* i 3) 1) (.get ^AVector (data (+ i (- pos w))) 1))
       (.set v (+ (* i 3) 2) (.get ^AVector (data (+ i (- pos w))) 2)))
+    v))
+
+(defn result-vector [data pos]
+  (let [pos (int pos)
+        v (Vector/createLength 1)]
+    (.set v (int 0) (.get ^AVector (data pos) (int 3)))
     v))
 
 (def up
@@ -136,6 +150,31 @@
 
 (def net (stack up rec)) 
 
+(defn train [n]
+  (dotimes [i n]
+    (let [^IComponent net net
+          data @TDATA
+          pos (+ WINDOW (rand-int (dec (- (count data) WINDOW))))
+          ^AVector input (feature-vector data pos)
+          ^AVector target (result-vector data pos)]
+      (.train net 
+        ^AVector input
+        ^AVector target 
+        ^nuroko.module.loss.LossFunction nuroko.module.loss.CrossEntropyLoss/INSTANCE 
+        (double 1.0))
+      (when (== 0 (mod i 100)) 
+        (.addMultiple (.getParameters net) (.getGradient net) 0.001)
+        (.fill (.getGradient net) 0.0)
+        (println i))))) 
+
+(defn rate [data i]
+  (let [^AVector v (data i)]
+        (.set v 4 (.get ^AVector (think net (feature-vector data i)) 0))))
+
+(defn score []
+  (let [data @TDATA]
+    (doseq [i (range WINDOW (dec (count data)))]
+      (rate data i))))
 
 ;; =================== SERVER   ============================
 
@@ -143,7 +182,7 @@
 (defn read-byte [^DataInputStream dis]
   (norm (unchecked-int (.read dis))))
 
-(defn read-row [^DataInputStream dis]
+(defn read-row ^AVector [^DataInputStream dis]
   (row (read-byte dis) (read-byte dis) (read-byte dis) 0 0))
 
 (defn server-fn [^InputStream input-stream ^OutputStream output-stream]
@@ -151,9 +190,11 @@
         dos (DataOutputStream. output-stream)]
     (try
       (loop []
-        (let [row (read-row dis)]
-          (.writeByte dos (unchecked-byte 13))
-          (show-row row))
+        (let [^AVector row (read-row dis)]
+          (show-row row)
+          (when (< WINDOW (count @DATA))
+            (rate @DATA (dec (count @DATA))))
+          (.writeByte dos (unchecked-byte (long (* 255 (.get row 4))))))
         (recur))
       (catch Throwable t (println (str t))))))
 
