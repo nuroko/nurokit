@@ -92,7 +92,7 @@
 
 (defn show-row [row]
   (append-data row)
-  (show (data-chart @DATA) :title "Mouse"))
+  (show (data-chart @DATA) :title "Sensor data"))
 
 
 ;; =================== NEURAL NET ============================
@@ -145,10 +145,10 @@
                     :outputs OUTPUT-SIZE
                     :layers 1))
 
-(show (network-graph rec :line-width 2) 
-        :title "Neural Net : rec")
-
 (def net (stack up rec)) 
+
+(show (network-graph net :line-width 1) 
+        :title "Neural Network")
 
 (defn train [n]
   (dotimes [i n]
@@ -210,7 +210,10 @@
 
 (defn demo []
   (reset)
+  (load-data) 
+  (train 300000) 
   
+  (score) 
   (show (data-chart @TDATA 0 1000))
   
   (dotimes [i 100]
