@@ -110,8 +110,8 @@
 		</dependency>
 		<dependency>
 			<groupId>net.mikera</groupId>
-			<artifactId>image-matrix</artifactId>
-			<version>0.1.0</version>
+			<artifactId>imagez</artifactId>
+			<version>0.0.3</version>
 		</dependency>
 	</dependencies>
 	<name>Nurokit</name>
