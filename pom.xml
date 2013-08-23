@@ -74,7 +74,7 @@
 		<dependency>
 			<groupId>net.mikera</groupId>
 			<artifactId>clojure-utils</artifactId>
-			<version>0.3.0</version>
+			<version>0.3.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>net.mikera</groupId>
@@ -102,6 +102,11 @@
 			<artifactId>data.csv</artifactId>
 			<version>0.1.2</version>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>clj-time</groupId>
+			<artifactId>clj-time</artifactId>
+			<version>0.6.0</version>
 		</dependency>
 	</dependencies>
 	<name>Nurokit</name>
