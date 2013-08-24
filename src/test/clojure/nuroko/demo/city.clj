@@ -131,8 +131,57 @@
 ;;(scale! mmap 100)
 ;;:OK
 
+;; ======================================
+;; Neural Net
+
+(def INPUT-SIZE (+ (* GW GH)))
+(def SYNTH-SIZE 40)
+(def OUTPUT-SIZE 4)
+
+(defn norm-quant ^double [^double x]
+  (Math/log10 (+ 1.0 x)))
+
+(defn feature-vector [data pos]
+  (let [pos (int pos)
+        n (int INPUT-SIZE)
+        ^Vector v (Vector/createLength n)]
+    (.set v (.asVector ^AMatrix (data pos)))
+    (dotimes [i n]
+      (let [i (int i)]
+        (.set v i (norm-quant (.get v i))))) 
+    v))
+
+(def up
+    (neural-network :inputs INPUT-SIZE  
+                    :max-links INPUT-SIZE
+                    :output-op Ops/TANH
+                    :outputs SYNTH-SIZE
+                    :layers 1))
+
+(def down
+    (neural-network :inputs SYNTH-SIZE  
+                    :max-links INPUT-SIZE
+                    :output-op Ops/LINEAR
+                    :outputs INPUT-SIZE
+                    :layers 1))
+
+(def synth (stack up down))
+
+(def rec
+    (neural-network :inputs SYNTH-SIZE  
+                    :max-links SYNTH-SIZE
+                    :hidden-op Ops/TANH
+                    :output-op Ops/LOGISTIC
+                    :outputs OUTPUT-SIZE
+                    :layers 2))
+
+(def net (stack up rec)) 
+
+;; =====================================================
+;; Demo Code
+
 (defn demo []
-  (load-data "E:/Users/Mike/Desktop/singtel-call_2012-05-14.csv" 1000)
+  (load-data "C:/Users/Mike/Desktop/singtel-call_2012-05-14.csv")
   (show (im/zoom 8 (city-image mmap)))
   
   (dotimes [repeat 4] 
