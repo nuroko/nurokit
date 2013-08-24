@@ -106,6 +106,20 @@
 	            (process-rec ts lat long))
 	          (recur (next lines))))))))
 
+(def pdata (atom []))
+
+(defn load-pdata [fname]
+  (reset! pdata [])
+  (with-open [rdr (clojure.java.io/reader fname)]
+	    (let [lseq (line-seq rdr)
+	          lines lseq]
+	      (loop [lines (seq lines)]
+	        (when lines
+	          (let [line (first lines)
+	                flds (first (csv/read-csv line))
+	                congestion (pd (flds 1))]
+	            (swap! pdata conj congestion))
+	          (recur (next lines)))))))
 
 ;; ======================================================
 ;; VISUALISATION
@@ -137,6 +151,7 @@
 (def INPUT-SIZE (+ (* GW GH)))
 (def SYNTH-SIZE 40)
 (def OUTPUT-SIZE 4)
+(def TRAFFIC_FACTOR 0.01)
 
 (defn norm-quant ^double [^double x]
   (Math/log10 (+ 1.0 x)))
@@ -149,6 +164,14 @@
     (dotimes [i n]
       (let [i (int i)]
         (.set v i (norm-quant (.get v i))))) 
+    v))
+
+(defn result-vector [pdata pos]
+  (let [pos (int pos)
+        n (int OUTPUT-SIZE)
+        ^Vector v (Vector/createLength n)]
+    (dotimes [i n]
+      (.set v (int i) (double (* TRAFFIC_FACTOR (pdata (+ pos i))))))
     v))
 
 (def up
