@@ -86,6 +86,7 @@
       (swap! loaded inc))))
 
 (defn clear-data []
+  (reset! loaded 0)
   (doseq [m data]
     (scale! m 0.0)))
 
@@ -106,7 +107,7 @@
 	            (process-rec ts lat long))
 	          (recur (next lines))))))))
 
-(def pdata (atom []))
+(defonce pdata (atom []))
 
 (defn load-pdata [fname]
   (reset! pdata [])
@@ -172,7 +173,7 @@
         n (int OUTPUT-SIZE)
         ^Vector v (Vector/createLength n)]
     (dotimes [i n]
-      (.set v (int i) (double (* TRAFFIC_FACTOR (+
+      (.set v (int i) (double (* TRAFFIC_FACTOR 0.25 (+
                                                   (pdata (+ pos i))
                                                   (pdata (+ pos i 1))
                                                   (pdata (+ pos i 2))
@@ -181,7 +182,7 @@
 
 (def up
     (neural-network :inputs INPUT-SIZE  
-                    :max-links INPUT-SIZE
+                    :max-links SYNTH-SIZE
                     :output-op Ops/TANH
                     :outputs SYNTH-SIZE
                     :layers 1))
@@ -199,9 +200,9 @@
     (neural-network :inputs SYNTH-SIZE  
                     :max-links SYNTH-SIZE
                     :hidden-op Ops/TANH
-                    :output-op Ops/LOGISTIC
+                    :output-op Ops/LINEAR
                     :outputs OUTPUT-SIZE
-                    :layers 2))
+                    :layers 1))
 
 (def net (stack up rec)) 
 
@@ -218,7 +219,7 @@
         ^nuroko.module.loss.LossFunction nuroko.module.loss.SquaredErrorLoss/INSTANCE 
         (double 1.0))
       (when (== 0 (mod i 100)) 
-        (.addMultiple (.getParameters net) (.getGradient net) 0.001)
+        (.addMultiple (.getParameters net) (.getGradient net) 0.0001)
         (.fill (.getGradient net) 0.0)
         (println i))))) 
 
@@ -227,13 +228,25 @@
 
 (defn demo []
   (load-pdata "C:/Users/Mike/Desktop/Buuuk_Traffic_Transformed_Data.csv")
-  (show (vector-bars (array :vectorz @pdata)))
+  (show (xy-chart 
+          (scale 0.25 (vec (range PERIODS)))
+          @pdata) :title "Congestion for 2013-05-14")
   
   (load-data "C:/Users/Mike/Desktop/singtel-call_2012-05-14.csv")
-  (show (im/zoom 8 (city-image mmap)))
+  (show (im/zoom 8 (city-image (data 30))))
   
-  (dotimes [repeat 4] 
+  (train 10000) 
+  (think net (feature-vector data 10))
+  (show (vector-bars (array :vectorz (for [i (range PERIODS)] (.get ^AVector (think net (feature-vector data i)) 0)))))
+
+  (dotimes [repeat 1] 
     (dotimes [i PERIODS] 
       (Thread/sleep 50)
-      (show (im/zoom 4 (city-image (data i))))))
+      (show (im/zoom 8 (city-image (data i))))))
+  
+  (show (xy-chart-multiline 
+         (scale  0.25 (vec (range PERIODS)))
+         [(take PERIODS (drop 2 @pdata))
+         (scale 100 (vec (for [i (range PERIODS)] (.get ^AVector (think net (feature-vector data i)) 0))))]) :title "Predicted vs actual congestion")
+  
   )
