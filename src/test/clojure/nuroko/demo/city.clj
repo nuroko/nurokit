@@ -112,7 +112,8 @@
   (reset! pdata [])
   (with-open [rdr (clojure.java.io/reader fname)]
 	    (let [lseq (line-seq rdr)
-	          lines lseq]
+	          lines (next lseq) ;; skip titles
+           ]
 	      (loop [lines (seq lines)]
 	        (when lines
 	          (let [line (first lines)
@@ -171,7 +172,11 @@
         n (int OUTPUT-SIZE)
         ^Vector v (Vector/createLength n)]
     (dotimes [i n]
-      (.set v (int i) (double (* TRAFFIC_FACTOR (pdata (+ pos i))))))
+      (.set v (int i) (double (* TRAFFIC_FACTOR (+
+                                                  (pdata (+ pos i))
+                                                  (pdata (+ pos i 1))
+                                                  (pdata (+ pos i 2))
+                                                  (pdata (+ pos i 3)))))))
     v))
 
 (def up
@@ -200,10 +205,30 @@
 
 (def net (stack up rec)) 
 
+(defn train [n]
+  (dotimes [i n]
+    (let [^IComponent net net
+          data data
+          pos (rand-int PERIODS)
+          ^AVector input (feature-vector data pos)
+          ^AVector target (result-vector @pdata pos)]
+      (.train net 
+        ^AVector input
+        ^AVector target 
+        ^nuroko.module.loss.LossFunction nuroko.module.loss.SquaredErrorLoss/INSTANCE 
+        (double 1.0))
+      (when (== 0 (mod i 100)) 
+        (.addMultiple (.getParameters net) (.getGradient net) 0.001)
+        (.fill (.getGradient net) 0.0)
+        (println i))))) 
+
 ;; =====================================================
 ;; Demo Code
 
 (defn demo []
+  (load-pdata "C:/Users/Mike/Desktop/Buuuk_Traffic_Transformed_Data.csv")
+  (show (vector-bars (array :vectorz @pdata)))
+  
   (load-data "C:/Users/Mike/Desktop/singtel-call_2012-05-14.csv")
   (show (im/zoom 8 (city-image mmap)))
   
