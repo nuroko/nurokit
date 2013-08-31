@@ -35,7 +35,7 @@
 (def PERIOD 15)
 
 ;; total number of periods
-(def PERIODS (dec (* 24 (/ 60 PERIOD))))
+(def PERIODS (* 24 (/ 60 PERIOD)))
 
 (defn pint ^long [^String s]
   (Long/parseLong s))
@@ -132,7 +132,7 @@
 ;;:OK
 
 (defn demo []
-  (load-data "E:/Users/Mike/Desktop/singtel-call_2012-05-14.csv" 1000)
+  (load-data "E:/Nuroko/Hackathons/DataInTheCity/singtel-call_2012-05-14.csv")
   (show (im/zoom 8 (city-image mmap)))
   
   (dotimes [repeat 4] 
