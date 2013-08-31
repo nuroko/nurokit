@@ -86,6 +86,7 @@
       (swap! loaded inc))))
 
 (defn clear-data []
+  (reset! loaded 0)
   (doseq [m data]
     (scale! m 0.0)))
 
@@ -106,6 +107,21 @@
 	            (process-rec ts lat long))
 	          (recur (next lines))))))))
 
+(defonce pdata (atom []))
+
+(defn load-pdata [fname]
+  (reset! pdata [])
+  (with-open [rdr (clojure.java.io/reader fname)]
+	    (let [lseq (line-seq rdr)
+	          lines (next lseq) ;; skip titles
+           ]
+	      (loop [lines (seq lines)]
+	        (when lines
+	          (let [line (first lines)
+	                flds (first (csv/read-csv line))
+	                congestion (pd (flds 1))]
+	            (swap! pdata conj congestion))
+	          (recur (next lines)))))))
 
 ;; ======================================================
 ;; VISUALISATION
@@ -131,12 +147,106 @@
 ;;(scale! mmap 100)
 ;;:OK
 
+;; ======================================
+;; Neural Net
+
+(def INPUT-SIZE (+ (* GW GH)))
+(def SYNTH-SIZE 40)
+(def OUTPUT-SIZE 4)
+(def TRAFFIC_FACTOR 0.01)
+
+(defn norm-quant ^double [^double x]
+  (Math/log10 (+ 1.0 x)))
+
+(defn feature-vector [data pos]
+  (let [pos (int pos)
+        n (int INPUT-SIZE)
+        ^Vector v (Vector/createLength n)]
+    (.set v (.asVector ^AMatrix (data pos)))
+    (dotimes [i n]
+      (let [i (int i)]
+        (.set v i (norm-quant (.get v i))))) 
+    v))
+
+(defn result-vector [pdata pos]
+  (let [pos (int pos)
+        n (int OUTPUT-SIZE)
+        ^Vector v (Vector/createLength n)]
+    (dotimes [i n]
+      (.set v (int i) (double (* TRAFFIC_FACTOR 0.25 (+
+                                                  (pdata (+ pos i))
+                                                  (pdata (+ pos i 1))
+                                                  (pdata (+ pos i 2))
+                                                  (pdata (+ pos i 3)))))))
+    v))
+
+(def up
+    (neural-network :inputs INPUT-SIZE  
+                    :max-links SYNTH-SIZE
+                    :output-op Ops/TANH
+                    :outputs SYNTH-SIZE
+                    :layers 1))
+
+(def down
+    (neural-network :inputs SYNTH-SIZE  
+                    :max-links INPUT-SIZE
+                    :output-op Ops/LINEAR
+                    :outputs INPUT-SIZE
+                    :layers 1))
+
+(def synth (stack up down))
+
+(def rec
+    (neural-network :inputs SYNTH-SIZE  
+                    :max-links SYNTH-SIZE
+                    :hidden-op Ops/TANH
+                    :output-op Ops/LINEAR
+                    :outputs OUTPUT-SIZE
+                    :layers 1))
+
+(def net (stack up rec)) 
+
+(defn train [n]
+  (dotimes [i n]
+    (let [^IComponent net net
+          data data
+          pos (rand-int PERIODS)
+          ^AVector input (feature-vector data pos)
+          ^AVector target (result-vector @pdata pos)]
+      (.train net 
+        ^AVector input
+        ^AVector target 
+        ^nuroko.module.loss.LossFunction nuroko.module.loss.SquaredErrorLoss/INSTANCE 
+        (double 1.0))
+      (when (== 0 (mod i 100)) 
+        (.addMultiple (.getParameters net) (.getGradient net) 0.0001)
+        (.fill (.getGradient net) 0.0)
+        (println i))))) 
+
+;; =====================================================
+;; Demo Code
+
 (defn demo []
-  (load-data "E:/Nuroko/Hackathons/DataInTheCity/singtel-call_2012-05-14.csv")
-  (show (im/zoom 8 (city-image mmap)))
+  (load-pdata "C:/Users/Mike/Desktop/Buuuk_Traffic_Transformed_Data.csv")
+  (show (xy-chart 
+          (scale 0.25 (vec (range PERIODS)))
+          @pdata) :title "Congestion for 2013-05-14")
   
-  (dotimes [repeat 4] 
+  (load-data "E:/Nuroko/Hackathons/DataInTheCity/singtel-call_2012-05-14.csv")
+  (show (im/zoom 8 (city-image (data 30))))
+  
+  (train 10000) 
+  (think net (feature-vector data 10))
+  (show (vector-bars (array :vectorz (for [i (range PERIODS)] (.get ^AVector (think net (feature-vector data i)) 0)))))
+
+  (dotimes [repeat 1] 
     (dotimes [i PERIODS] 
       (Thread/sleep 50)
-      (show (im/zoom 4 (city-image (data i))))))
+      (show (im/zoom 8 (city-image (data i))))))
+  
+  (show (xy-chart-multiline 
+         (scale  0.25 (vec (range PERIODS)))
+         [(take PERIODS (drop 2 @pdata))
+         (scale 100 (vec (for [i (range PERIODS)] (.get ^AVector (think net (feature-vector data i)) 0))))]) :title "Predicted vs actual congestion")
+  
   )
