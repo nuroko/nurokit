@@ -226,6 +226,8 @@
 ;; =====================================================
 ;; Demo Code
 
+(def running (atom true))
+
 (defn demo []
   (load-pdata "C:/Users/Mike/Desktop/Buuuk_Traffic_Transformed_Data.csv")
   (show (xy-chart 
@@ -235,14 +237,20 @@
   (load-data "E:/Nuroko/Hackathons/DataInTheCity/singtel-call_2012-05-14.csv")
   (show (im/zoom 8 (city-image (data 30))))
   
-  (train 10000) 
+  (train 100000) 
   (think net (feature-vector data 10))
-  (show (vector-bars (array :vectorz (for [i (range PERIODS)] (.get ^AVector (think net (feature-vector data i)) 0)))))
+  (show (xy-chart-multiline 
+          (scale  0.25 (vec (range PERIODS)))
+          [[0 0]
+           (scale 100 (vec (for [i (range PERIODS)] (.get ^AVector (think net (feature-vector data i)) 0))))]) :title "Predicted congestion")
+  
+  (show (vector-bars (array :vectorz (for [i (range PERIODS)] (esum (mul 0.25 ^AVector (think net (feature-vector data i)) 0))))))
 
-  (dotimes [repeat 1] 
+  (while @running 
     (dotimes [i PERIODS] 
       (Thread/sleep 50)
-      (show (im/zoom 8 (city-image (data i))))))
+      ;;(show (vector-bars (think net (feature-vector data i))) :title "Congestion Prediction")
+      (show (im/zoom 10 (city-image (data i))) :title "Mobile Activity")))
   
   (show (xy-chart-multiline 
          (scale  0.25 (vec (range PERIODS)))
