@@ -50,7 +50,7 @@
 		<dependency>
 			<groupId>net.mikera</groupId>
 			<artifactId>vectorz-clj</artifactId>
-			<version>0.13.2</version>
+			<version>0.14.0</version>
 		</dependency>
 		<dependency>
 			<groupId>net.mikera</groupId>
@@ -61,7 +61,7 @@
 		<dependency>
 			<groupId>net.mikera</groupId>
 			<artifactId>mikera-gui</artifactId>
-			<version>0.1.0</version>
+			<version>0.3.0</version>
 		</dependency>
 		<dependency>
 			<groupId>net.mikera</groupId>
@@ -71,7 +71,7 @@
 		<dependency>
 			<groupId>incanter</groupId>
 			<artifactId>incanter</artifactId>
-			<version>1.5.2</version>
+			<version>1.5.4</version>
 		</dependency>
 		<dependency>
 			<groupId>net.mikera</groupId>
@@ -81,7 +81,7 @@
 		<dependency>
 			<groupId>net.mikera</groupId>
 			<artifactId>core.matrix</artifactId>
-			<version>0.9.0</version>
+			<version>0.10.0</version>
 		</dependency>
 		<dependency>
 			<groupId>net.mikera</groupId>
@@ -104,6 +104,16 @@
 			<artifactId>data.csv</artifactId>
 			<version>0.1.2</version>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>clj-time</groupId>
+			<artifactId>clj-time</artifactId>
+			<version>0.6.0</version>
+		</dependency>
+		<dependency>
+			<groupId>net.mikera</groupId>
+			<artifactId>imagez</artifactId>
+			<version>0.1.0</version>
 		</dependency>
 	</dependencies>
 
