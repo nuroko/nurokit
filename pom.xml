@@ -43,11 +43,6 @@
 			<version>1.5.1</version>
 		</dependency>
 		<dependency>
-			<groupId>com.nuroko</groupId>
-			<artifactId>nurokore</artifactId>
-			<version>0.0.8</version>
-		</dependency>
-		<dependency>
 			<groupId>net.mikera</groupId>
 			<artifactId>vectorz-clj</artifactId>
 			<version>0.14.0</version>
@@ -98,6 +93,11 @@
 			<artifactId>server-socket</artifactId>
 			<version>1.0.0</version>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.nuroko</groupId>
+			<artifactId>nurokore</artifactId>
+			<version>0.0.8</version>
 		</dependency>
 		<dependency>
 			<groupId>org.clojure</groupId>
