@@ -311,7 +311,7 @@
     (Components/offset (int length) (double delta))))
 
 (defn sparsifier 
-  "Creates an offset component"
+  "Creates a sparsity enforcing regularization component"
   (^IComponent [& {:keys [length target-mean weight]
                    :or {target-mean 0.1
                         weight 0.1}}]
