@@ -9,7 +9,7 @@
 	<parent>
 		<groupId>com.nuroko</groupId>
 		<artifactId>nuroko-pom</artifactId>
-		<version>0.0.6</version>
+		<version>0.0.7</version>
 	</parent>
 
 	<url>https://github.com/nuroko/${project.artifactId}.git</url>
