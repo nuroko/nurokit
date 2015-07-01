@@ -70,17 +70,17 @@
 		<dependency>
 			<groupId>net.mikera</groupId>
 			<artifactId>clojure-utils</artifactId>
-			<version>0.6.1</version>
+			<version>0.6.2</version>
 		</dependency>
 		<dependency>
 			<groupId>net.mikera</groupId>
 			<artifactId>core.matrix</artifactId>
-			<version>0.26.1</version>
+			<version>0.36.1</version>
 		</dependency>
 		<dependency>
 			<groupId>net.mikera</groupId>
 			<artifactId>core.matrix.stats</artifactId>
-			<version>0.4.0</version>
+			<version>0.6.0</version>
 		</dependency>
 		<dependency>
 			<groupId>net.mikera</groupId>
@@ -112,7 +112,7 @@
 		<dependency>
 			<groupId>net.mikera</groupId>
 			<artifactId>imagez</artifactId>
-			<version>0.4.1</version>
+			<version>0.6.0</version>
 		</dependency>
 	</dependencies>
 
