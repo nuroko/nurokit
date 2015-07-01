@@ -39,12 +39,12 @@
 		<dependency>
 			<groupId>org.clojure</groupId>
 			<artifactId>clojure</artifactId>
-			<version>1.6.0</version>
+			<version>1.7.0</version>
 		</dependency>
 		<dependency>
 			<groupId>net.mikera</groupId>
 			<artifactId>vectorz-clj</artifactId>
-			<version>0.25.0</version>
+			<version>0.30.1</version>
 		</dependency>
 		<dependency>
 			<groupId>net.mikera</groupId>
@@ -75,7 +75,7 @@
 		<dependency>
 			<groupId>net.mikera</groupId>
 			<artifactId>core.matrix</artifactId>
-			<version>0.29.1</version>
+			<version>0.26.1</version>
 		</dependency>
 		<dependency>
 			<groupId>net.mikera</groupId>
