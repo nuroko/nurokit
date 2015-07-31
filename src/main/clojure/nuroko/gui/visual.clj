@@ -114,7 +114,7 @@
     (.setDataElements (.getRaster bi) (int 0) (int 0) width height data)
 	  bi))
 
-(defn label 
+(defn jlabel 
   "Creates a JLabel with the given content"
   (^JLabel [s]
     (let [^String s (str s)
@@ -131,7 +131,7 @@
       (instance? BufferedImage x) (JIcon. ^BufferedImage x)
 	    (instance? JFreeChart x) (ChartPanel. ^JFreeChart x)
       (sequential? x) (grid (seq x))
-      :else (label x))))
+      :else (jlabel x))))
 
 (defn grid [things]
   (let [n (count things)

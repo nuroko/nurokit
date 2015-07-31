@@ -1,7 +1,7 @@
 (ns nuroko.demo.conj
   (:use [nuroko.lab core charts])
   (:use [nuroko.gui visual])
-  (:use [clojure.core.matrix])
+  (:use [clojure.core.matrix :exclude [labels]])
   (:require [task.core :as task])
   (:require [nuroko.data mnist])
   (:import [mikera.vectorz Op Ops])
