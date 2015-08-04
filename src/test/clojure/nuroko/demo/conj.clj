@@ -47,7 +47,7 @@
                     :output-op Ops/LOGISTIC
 	                  :hidden-sizes [6]))
   
-  (show (network-graph net :line-width 2) 
+  (show (network-graph net :line-width 3) 
         :title "Neural Net : Scrabble")
  
   (defn scrabble-score [net letter]
@@ -88,9 +88,10 @@
 ;; MNIST digit recognistion task
 
   ;; training data - 60,000 cases
-  (def data @nuroko.data.mnist/data-store)
-  (def labels @nuroko.data.mnist/label-store)
-  (def INNER_SIZE 300) 
+  (do 
+    (def data @nuroko.data.mnist/data-store)
+    (def labels @nuroko.data.mnist/label-store)
+    (def INNER_SIZE 300))
 
   (count data)
 
