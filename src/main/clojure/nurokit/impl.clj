@@ -16,6 +16,6 @@
     (think [m input]
       (assoc m :output (value-map input)))
     (output [m]
-      (:output m))
+      (or (:output m) (throw (Error. "Output not calculated"))))
     )
 

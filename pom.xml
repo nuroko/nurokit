@@ -129,6 +129,12 @@
 			<artifactId>imagez</artifactId>
 			<version>0.6.0</version>
 		</dependency>
+		<dependency>
+			<groupId>org.clojure</groupId>
+			<artifactId>test.check</artifactId>
+			<version>0.7.0</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 </project>
