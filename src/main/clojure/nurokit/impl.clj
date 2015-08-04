@@ -7,15 +7,15 @@
 
 ;; A model that implements a simple direct mapping of values
 (defrecord MapModel [value-map]
-;  np/PObject
-;    (clear [o]
-;      (dissoc o :output))
-;    (copy [o]
-;      (MapModel. value-map))
-;  np/PModel
-;    (think [m input]
-;      (assoc m :output (value-map input)))
-;    (output [m]
-;      (:output m))
+  np/PObject
+    (clean [o]
+     (dissoc o :output))
+    (copy [o]
+      (MapModel. value-map))
+  np/PModel
+    (think [m input]
+      (assoc m :output (value-map input)))
+    (output [m]
+      (:output m))
     )
 
