@@ -1,10 +1,12 @@
-(ns nurokit.protocols)
+(ns nurokit.protocols
+  "Namespace of protocols for Nurokit objects. Implementations may extend these to participate
+  in Nurokit model structures.")
 
 (set! *warn-on-reflection* true)
 (set! *unchecked-math* true)
 
 (defprotocol PObject
-  "Protocol for the nurokit object lifecycle."
+  "Protocol for the Nurokit object lifecycle."
   (copy [o]
      "Clones an object. Ensures copies are made of any mutable sub-components")
   (clean [o]

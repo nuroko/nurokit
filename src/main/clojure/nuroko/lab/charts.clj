@@ -1,4 +1,5 @@
 (ns nuroko.lab.charts
+  "Nurokit charting functionality namespace."
   (:import [org.jfree.chart ChartPanel])
   (:import [java.awt Component Dimension])
   (:import [javax.swing JFrame])

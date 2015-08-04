@@ -1,4 +1,5 @@
 (ns nuroko.gui.visual
+  "Visualisation tools for Nurokit Neural Networks"
   (:use clojure.core.matrix)
   (:import [javax.swing JComponent JLabel JPanel])
   (:import [java.awt Graphics2D Color GridLayout])
