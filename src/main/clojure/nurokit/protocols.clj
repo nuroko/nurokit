@@ -5,7 +5,7 @@
 
 (defprotocol PObject
   "Protocol for the nurokit object lifecycle."
-  (clone [o]
+  (copy [o]
      "Clones an object. Ensures copies are made of any mutable sub-components")
   (clear [o]
      "Clears an object to it's default state. Output attributes e.g. output values are cleared"))
