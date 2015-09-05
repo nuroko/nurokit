@@ -59,7 +59,7 @@
 		<dependency>
 			<groupId>net.mikera</groupId>
 			<artifactId>vectorz-clj</artifactId>
-			<version>0.33.0</version>
+			<version>0.34.0</version>
 		</dependency>
 		<dependency>
 			<groupId>net.mikera</groupId>
@@ -91,7 +91,7 @@
 		<dependency>
 			<groupId>net.mikera</groupId>
 			<artifactId>core.matrix</artifactId>
-			<version>0.37.0</version>
+			<version>0.40.0</version>
 		</dependency>
 		<dependency>
 			<groupId>net.mikera</groupId>
@@ -128,7 +128,7 @@
 		<dependency>
 			<groupId>net.mikera</groupId>
 			<artifactId>imagez</artifactId>
-			<version>0.7.0</version>
+			<version>0.8.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.clojure</groupId>
