@@ -18,3 +18,10 @@
      "Runs the model computation on the provided input. Returns a new model with the output value available")
   (output [m]
      "Gets the output for a model. Throws an exception if the model has not been run."))
+
+(defprotocol PGradientOptimiser
+  "A gradient optimiser is an abstraction for objects that update parameters based on gradient observations.
+   Gradient optimisers typically contain relating to previous observations, momentum etc."
+  (compute-parameters
+    [optimiser gradient parameters] 
+     "Computes updated parameters using the given average gradient. Returns the updated gradient optimiser."))

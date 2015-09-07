@@ -5,7 +5,7 @@
   (:require [mikera.cljutils.error :refer [error]]))
 
 (set! *warn-on-reflection* true)
-(set! *unchecked-math* true)
+(set! *unchecked-math* :warn-on-boxed)
 
 (defrecord AdaDelta [msgrad  ;; mean squared gradient
                      msdx    ;; mean squared delta update
